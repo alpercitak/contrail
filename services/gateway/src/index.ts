@@ -47,7 +47,7 @@ app.get('/ws', { websocket: true }, async (socket) => {
 
   // Send current state snapshot immediately on connect
   const raw = await store.hgetall(REDIS_FLIGHTS_KEY);
-  const flights: FlightEvent[] = Object.values(raw).map((v) => JSON.parse(v));
+  const flights: Array<FlightEvent> = Object.values(raw).map((v) => JSON.parse(v));
 
   const snapshot: GatewayMessage = { type: 'snapshot', flights };
   socket.send(JSON.stringify(snapshot));
