@@ -65,5 +65,8 @@ app.get('/ws', { websocket: true }, async (socket) => {
 
 app.get('/health', async () => ({ status: 'ok', clients: clients.size }));
 
+await store.flushdb();
+console.log(`[gateway] Redis database flushed (clean slate)`);
+
 await app.listen({ port: PORT, host: '0.0.0.0' });
 console.log(`[gateway] Listening on :${PORT}`);

@@ -4,7 +4,7 @@ import { TICK_MS } from '../constants';
 
 const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
-const randomCallsign = (): string => `CTRAIL${Math.floor(Math.random() * 9000) + 1000}`;
+const randomCallsign = (): string => `CONTRAIL${Math.floor(Math.random() * 9000) + 1000}`;
 
 const randomIcao24 = (): string =>
   Math.floor(Math.random() * 0xffffff)

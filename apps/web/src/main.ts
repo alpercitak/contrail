@@ -4,6 +4,12 @@ type Status = 'online' | 'connecting' | 'error';
 
 const WS_URL = 'ws://localhost:3001/ws';
 
+const AIRCRAFT_SVG = `<div class="aircraft-icon-wrapper">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/>
+    </svg>
+  </div>`;
+
 const map = new maplibregl.Map({
   container: 'map',
   style: 'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json',
@@ -20,30 +26,33 @@ let selectedIcao: string | null = null;
 let updateCount = 0;
 let updatesThisMinute = 0;
 
-const aircraftSVG = (color = '#00d4ff') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}">
-    <path d="M12 2L8 10H4l2 2-2 1 4 1 1 4 3-2 3 2 1-4 4-1-2-1 2-2h-4L12 2z"/>
-  </svg>`;
-
 const upsertMarker = (flight: FlightEvent) => {
   const existing = markers.get(flight.icao24);
 
   if (existing) {
     existing.marker.setLngLat([flight.lon, flight.lat]);
-    existing.el.style.transform = `rotate(${flight.heading}deg)`;
+    const wrapper = existing.el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
+    if (wrapper) {
+      wrapper.style.transform = `rotate(${flight.heading}deg)`;
+    }
     existing.flight = flight;
-    if (selectedIcao === flight.icao24) updatePanel(flight);
+    if (selectedIcao === flight.icao24) {
+      updatePanel(flight);
+    }
   } else {
     const el = document.createElement('div');
     el.className = 'aircraft-marker';
-    el.innerHTML = aircraftSVG();
-    el.style.transform = `rotate(${flight.heading}deg)`;
+    el.innerHTML = AIRCRAFT_SVG;
+
+    const wrapper = el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
+    wrapper.style.transform = `rotate(${flight.heading}deg)`;
 
     el.addEventListener('click', (e) => {
       e.stopPropagation();
       selectAircraft(flight.icao24);
     });
 
-    const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+    const marker = new maplibregl.Marker({ element: el, anchor: 'center', rotationAlignment: 'map' })
       .setLngLat([flight.lon, flight.lat])
       .addTo(map);
 
@@ -56,7 +65,6 @@ const selectAircraft = (icao24: string) => {
   if (selectedIcao && markers.has(selectedIcao)) {
     const prev = markers.get(selectedIcao);
     prev.el.classList.remove('selected');
-    prev.el.innerHTML = aircraftSVG();
   }
 
   selectedIcao = icao24;
@@ -64,7 +72,6 @@ const selectAircraft = (icao24: string) => {
   if (!entry) return;
 
   entry.el.classList.add('selected');
-  entry.el.innerHTML = aircraftSVG('#f59e0b');
   updatePanel(entry.flight);
   document.getElementById('panel')!.classList.add('visible');
 };
@@ -131,7 +138,6 @@ document.getElementById('panel-close')!.addEventListener('click', () => {
   if (selectedIcao && markers.has(selectedIcao)) {
     const entry = markers.get(selectedIcao);
     entry.el.classList.remove('selected');
-    entry.el.innerHTML = aircraftSVG();
   }
   selectedIcao = null;
   document.getElementById('panel')!.classList.remove('visible');
