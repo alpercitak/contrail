@@ -1,0 +1,54 @@
+services:
+  redis:
+    image: redis:8.6-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    image: oven/bun:latest
+    working_dir: /app/services/api
+    volumes:
+      - .:/app
+    ports:
+      - "3002:3002"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: "3002"
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: bun run dev
+
+  gateway:
+    image: oven/bun:latest
+    working_dir: /app/services/gateway
+    volumes:
+      - .:/app
+    ports:
+      - "3001:3001"
+    environment:
+      REDIS_URL: redis://redis:6379
+      PORT: "3001"
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: bun run dev
+
+  simulator:
+    image: oven/bun:latest
+    working_dir: /app/services/simulator
+    volumes:
+      - .:/app
+    environment:
+      REDIS_URL: redis://redis:6379
+      FLEET_SIZE: "150"
+      TICK_MS: "5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: bun run dev
