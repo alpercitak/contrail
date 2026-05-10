@@ -1,0 +1,17 @@
+{
+  "name": "@contrail/simulator",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "bun --watch src",
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf ./dist"
+  },
+  "dependencies": {
+    "@contrail/shared": "workspace:*",
+    "ioredis": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}
