@@ -13,6 +13,19 @@
       "name": "@contrail/shared",
       "version": "0.1.0",
     },
+    "services/api": {
+      "name": "@contrail/api",
+      "version": "0.1.0",
+      "dependencies": {
+        "@contrail/shared": "workspace:*",
+        "fastify": "catalog:",
+        "ioredis": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "services/gateway": {
       "name": "@contrail/gateway",
       "version": "0.1.0",
@@ -48,6 +61,8 @@
     "typescript": "^6.0.3",
   },
   "packages": {
+    "@contrail/api": ["@contrail/api@workspace:services/api"],
+
     "@contrail/gateway": ["@contrail/gateway@workspace:services/gateway"],
 
     "@contrail/shared": ["@contrail/shared@workspace:packages/shared"],

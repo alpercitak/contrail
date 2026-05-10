@@ -1,0 +1,32 @@
+import Fastify from 'fastify';
+import Redis from 'ioredis';
+import { REDIS_DEFAULT_URL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
+import type { FlightEvent } from '@contrail/shared/types';
+
+const PORT = parseInt(process.env.PORT ?? '3002');
+const REDIS_URL = process.env.REDIS_URL ?? REDIS_DEFAULT_URL;
+
+const redis = new Redis(REDIS_URL);
+
+const app = Fastify({ logger: false });
+
+// GET /flights — all current aircraft state
+app.get('/flights', async (_req, reply) => {
+  const raw = await redis.hgetall(REDIS_FLIGHTS_KEY);
+  const flights: FlightEvent[] = Object.values(raw).map((v) => JSON.parse(v));
+  return reply.send(flights);
+});
+
+// GET /flights/:icao24 — single aircraft
+app.get<{ Params: { icao24: string } }>('/flights/:icao24', async (req, reply) => {
+  const raw = await redis.hget(REDIS_FLIGHTS_KEY, req.params.icao24);
+  if (!raw) {
+    return reply.status(404).send({ error: 'not found' });
+  }
+  return reply.send(JSON.parse(raw) as FlightEvent);
+});
+
+app.get('/health', async () => ({ status: 'ok' }));
+
+await app.listen({ port: PORT, host: '0.0.0.0' });
+console.log(`[api] Listening on :${PORT}`);
