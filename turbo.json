@@ -9,9 +9,6 @@
       "cache": false,
       "persistent": true
     },
-    "typecheck": {
-      "dependsOn": ["^build"]
-    },
     "clean": {
       "cache": false
     }
