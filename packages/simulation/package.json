@@ -1,0 +1,21 @@
+{
+  "name": "@contrail/simulation",
+  "version": "0.1.0",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@contrail/shared": "workspace:"
+  },
+  "scripts": {
+    "dev": "bun --watch src",
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf ./dist"
+  }
+}
