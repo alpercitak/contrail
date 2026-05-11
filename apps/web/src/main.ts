@@ -19,20 +19,15 @@ const AIRCRAFT_SVG = `
     </svg>
   </div>`;
 
-let wsRetryDelay = 1000;
+const DEFAULT_WS_RETRY_DELAY = 1000;
 
 const map = L.map('map', { zoomControl: false }).setView([52, 10], 4);
 
-L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-  attribution: '',
-  maxZoom: 10,
-}).addTo(map);
-
-L.control.zoom({ position: 'bottomleft' }).addTo(map);
-
 const markers = new Map<string, MarkerEntry>();
+
 let selectedIcao: string | null = null;
 let updateCount = 0;
+let wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
 
 const upsertMarker = (flight: FlightEvent) => {
   const existing = markers.get(flight.icao24);
@@ -134,7 +129,7 @@ const connectWS = () => {
 
   ws.addEventListener('open', () => {
     setStatus('online');
-    wsRetryDelay = 1000;
+    wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
   });
 
   ws.addEventListener('message', (e) => {
@@ -174,6 +169,13 @@ const startDemo = async () => {
 
   setStatus('online');
 };
+
+L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+  attribution: '',
+  maxZoom: 10,
+}).addTo(map);
+
+L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
 document.getElementById('panel-close')!.addEventListener('click', deselect);
 map.on('click', deselect);
