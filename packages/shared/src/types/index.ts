@@ -1,4 +1,4 @@
-import { BBOX } from '../constants';
+import { DEFAULT_BOUNDING_BOX } from '../constants';
 
 export interface FlightEvent {
   icao24: string; // unique aircraft identifier
@@ -34,5 +34,3 @@ export interface ViewportMessage {
 }
 
 export type GatewayMessage = SnapshotMessage | UpdateMessage | ViewportMessage;
-
-export type BBox = typeof BBOX;

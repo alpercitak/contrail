@@ -1,10 +1,10 @@
 import Fastify from 'fastify';
 import Redis from 'ioredis';
-import { REDIS_DEFAULT_URL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
+import { DEFAULT_REDIS_URL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
 import type { FlightEvent } from '@contrail/shared/types';
 
-const PORT = parseInt(process.env.PORT ?? '3002');
-const REDIS_URL = process.env.REDIS_URL ?? REDIS_DEFAULT_URL;
+const PORT = Number.parseInt(process.env.PORT ?? '3002');
+const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 
 const redis = new Redis(REDIS_URL);
 

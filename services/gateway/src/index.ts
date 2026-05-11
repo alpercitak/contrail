@@ -1,11 +1,11 @@
 import Fastify from 'fastify';
 import fastifyWebsocket, { type WebSocket } from '@fastify/websocket';
 import Redis from 'ioredis';
-import { REDIS_CHANNEL, REDIS_DEFAULT_URL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
+import { DEFAULT_REDIS_URL, REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
 import type { FlightEvent, GatewayMessage, BoundingBox } from '@contrail/shared/types';
 
-const PORT = parseInt(process.env.PORT ?? '3001');
-const REDIS_URL = process.env.REDIS_URL ?? REDIS_DEFAULT_URL;
+const PORT = Number.parseInt(process.env.PORT ?? '3001');
+const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 
 const store = new Redis(REDIS_URL);
 const sub = new Redis(REDIS_URL);

@@ -1,4 +1,4 @@
-import { BBOX } from '@contrail/shared/constants';
+import { DEFAULT_BOUNDING_BOX } from '@contrail/shared/constants';
 import type { FlightEvent } from '@contrail/shared/types';
 import { randomCallsign, randomIcao24 } from './callsign';
 
@@ -7,8 +7,8 @@ const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 export const spawnAircraft = (): FlightEvent => ({
   icao24: randomIcao24(),
   callsign: randomCallsign(),
-  lat: rand(BBOX.latMin, BBOX.latMax),
-  lon: rand(BBOX.lonMin, BBOX.lonMax),
+  lat: rand(DEFAULT_BOUNDING_BOX.latMin, DEFAULT_BOUNDING_BOX.latMax),
+  lon: rand(DEFAULT_BOUNDING_BOX.lonMin, DEFAULT_BOUNDING_BOX.lonMax),
   heading: rand(0, 360),
   altitude: rand(6000, 12500), // cruise altitude range in meters
   speed: rand(700, 950), // km/h cruise range
@@ -37,10 +37,10 @@ export const tickAircraft = (flightEvent: FlightEvent, tickMs: number): FlightEv
   let lon = flightEvent.lon + deltaLon;
 
   // Wrap at bbox edges
-  if (lat > BBOX.latMax) lat = BBOX.latMin;
-  if (lat < BBOX.latMin) lat = BBOX.latMax;
-  if (lon > BBOX.lonMax) lon = BBOX.lonMin;
-  if (lon < BBOX.lonMin) lon = BBOX.lonMax;
+  if (lat > DEFAULT_BOUNDING_BOX.latMax) lat = DEFAULT_BOUNDING_BOX.latMin;
+  if (lat < DEFAULT_BOUNDING_BOX.latMin) lat = DEFAULT_BOUNDING_BOX.latMax;
+  if (lon > DEFAULT_BOUNDING_BOX.lonMax) lon = DEFAULT_BOUNDING_BOX.lonMin;
+  if (lon < DEFAULT_BOUNDING_BOX.lonMin) lon = DEFAULT_BOUNDING_BOX.lonMax;
 
   return { ...flightEvent, lat, lon, heading };
 };

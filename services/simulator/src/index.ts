@@ -1,8 +1,17 @@
 import Redis from 'ioredis';
-import { REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
-import { FLEET_SIZE, REDIS_URL, TICK_MS } from './constants';
+import {
+  DEFAULT_FLEET_SIZE,
+  DEFAULT_REDIS_URL,
+  DEFAULT_TICK_MS,
+  REDIS_CHANNEL,
+  REDIS_FLIGHTS_KEY,
+} from '@contrail/shared/constants';
 import { SimulationEngine } from '@contrail/simulation';
 import type { FlightEvent } from '@contrail/shared';
+
+const FLEET_SIZE = Number.parseInt(process.env.FLEET_SIZE ?? DEFAULT_FLEET_SIZE);
+const TICK_MS = Number.parseInt(process.env.TICK_MS ?? DEFAULT_TICK_MS);
+const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 
 const cleanStaleFlights = async (redis: Redis) => {
   const raw = await redis.hgetall(REDIS_FLIGHTS_KEY);
