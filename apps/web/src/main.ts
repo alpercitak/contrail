@@ -99,9 +99,18 @@ const updatePanel = (flight: FlightEvent) => {
   document.getElementById('p-pos')!.textContent = `${flight.lat.toFixed(2)}, ${flight.lon.toFixed(2)}`;
 };
 
+const animateCount = (el: HTMLElement, target: number) => {
+  const current = parseInt(el.textContent ?? '0');
+  if (current >= target) {
+    return;
+  }
+  el.textContent = String(current + 1);
+  setTimeout(() => animateCount(el, target), 300);
+};
+
 const incrementUpdates = () => {
   updateCount++;
-  document.getElementById('updates')!.textContent = String(updateCount);
+  animateCount(document.getElementById('updates')!, updateCount);
 };
 
 const resetUpdates = () => {
