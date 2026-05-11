@@ -6,11 +6,11 @@ import {
   REDIS_CHANNEL,
   REDIS_FLIGHTS_KEY,
 } from '@contrail/shared/constants';
+import type { FlightEvent } from '@contrail/shared/types';
 import { SimulationEngine } from '@contrail/simulation';
-import type { FlightEvent } from '@contrail/shared';
 
-const FLEET_SIZE = Number.parseInt(process.env.FLEET_SIZE ?? DEFAULT_FLEET_SIZE);
-const TICK_MS = Number.parseInt(process.env.TICK_MS ?? DEFAULT_TICK_MS);
+const FLEET_SIZE = process.env.FLEET_SIZE ? Number.parseInt(process.env.FLEET_SIZE) : DEFAULT_FLEET_SIZE;
+const TICK_MS = process.env.TICK_MS ? Number.parseInt(process.env.TICK_MS) : DEFAULT_TICK_MS;
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 
 const cleanStaleFlights = async (redis: Redis) => {

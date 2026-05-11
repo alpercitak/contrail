@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { DEFAULT_FLEET_SIZE, DEFAULT_TICK_MS } from '@contrail/shared/constants';
 import type { FlightEvent, GatewayMessage } from '@contrail/shared/types';
 
 type Status = 'online' | 'connecting' | 'error';
@@ -228,7 +229,7 @@ const init = async () => {
 
 const startDemo = async () => {
   const { SimulationEngine } = await import('@contrail/simulation');
-  const engine = new SimulationEngine({ fleetSize: 150, tickMs: 5000 });
+  const engine = new SimulationEngine({ fleetSize: DEFAULT_FLEET_SIZE, tickMs: DEFAULT_TICK_MS });
 
   for (const flight of engine.snapshot()) upsertMarker(flight);
 
@@ -237,7 +238,7 @@ const startDemo = async () => {
       upsertMarker(flight);
       incrementUpdates();
     }
-  }, 5000);
+  }, DEFAULT_TICK_MS);
 
   setStatus('online');
 };
