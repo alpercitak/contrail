@@ -10,6 +10,7 @@ services:
       retries: 5
 
   api:
+    profiles: ["full"]
     image: oven/bun:latest
     working_dir: /app/services/api
     volumes:
@@ -25,6 +26,7 @@ services:
     command: bun run dev
 
   gateway:
+    profiles: ["full"]
     image: oven/bun:latest
     working_dir: /app/services/gateway
     volumes:
@@ -40,6 +42,7 @@ services:
     command: bun run dev
 
   simulator:
+    profiles: ["full"]
     image: oven/bun:latest
     working_dir: /app/services/simulator
     volumes:
@@ -54,6 +57,7 @@ services:
     command: bun run dev
 
   web:
+    profiles: ["full"]
     image: oven/bun:latest
     working_dir: /app/apps/web
     volumes:
