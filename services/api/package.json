@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@contrail/shared": "workspace:*",
+    "@fastify/cors": "^11.2.0",
     "fastify": "catalog:",
     "ioredis": "catalog:"
   },

@@ -11,6 +11,7 @@ type MarkerEntry = {
 };
 
 const WS_URL = import.meta.env.VITE_WS_URL as string | undefined;
+const API_URL = import.meta.env.VITE_API_URL as string | undefined;
 const AIRCRAFT_SVG = `
   <div class="aircraft-icon-wrapper">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -216,6 +217,15 @@ const connectWS = () => {
   ws.addEventListener('error', () => setStatus('error'));
 };
 
+const init = async () => {
+  const res = await fetch(`${API_URL}/flights`);
+  const flights: Array<FlightEvent> = await res.json();
+  for (const flight of flights) {
+    upsertMarker(flight);
+  }
+  connectWS();
+};
+
 const startDemo = async () => {
   const { SimulationEngine } = await import('@contrail/simulation');
   const engine = new SimulationEngine({ fleetSize: 150, tickMs: 5000 });
@@ -246,7 +256,7 @@ map.on('moveend', sendViewport);
 map.on('zoomend', sendViewport);
 
 if (WS_URL) {
-  connectWS();
+  init();
 } else {
   startDemo();
 }

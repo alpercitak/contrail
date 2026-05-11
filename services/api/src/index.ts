@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import fastifyCors from '@fastify/cors';
 import Redis from 'ioredis';
 import { DEFAULT_REDIS_URL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
 import type { FlightEvent } from '@contrail/shared/types';
@@ -9,6 +10,10 @@ const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 const redis = new Redis(REDIS_URL);
 
 const app = Fastify({ logger: false });
+
+await app.register(fastifyCors, {
+  origin: true,
+});
 
 // GET /flights — all current aircraft state
 app.get('/flights', async (_req, reply) => {
