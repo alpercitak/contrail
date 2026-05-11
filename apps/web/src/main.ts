@@ -11,19 +11,19 @@ type MarkerEntry = {
 };
 
 const WS_URL = import.meta.env.VITE_WS_URL as string | undefined;
-
 const AIRCRAFT_SVG = `
   <div class="aircraft-icon-wrapper">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/>
     </svg>
   </div>`;
-
 const DEFAULT_WS_RETRY_DELAY = 1000;
+const TRAIL_LENGTH = 10;
 
 const map = L.map('map', { zoomControl: false }).setView([52, 10], 4);
-
 const markers = new Map<string, MarkerEntry>();
+const trails = new Map<string, L.Polyline>();
+const trailPositions = new Map<string, Array<[number, number]>>();
 
 let selectedIcao: string | null = null;
 let updateCount = 0;
@@ -36,9 +36,28 @@ const upsertMarker = (flight: FlightEvent) => {
   if (existing) {
     existing.marker.setLatLng([flight.lat, flight.lon]);
     const wrapper = existing.el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
-    if (wrapper) wrapper.style.transform = `rotate(${flight.heading}deg)`;
+    if (wrapper) {
+      wrapper.style.transform = `rotate(${flight.heading}deg)`;
+    }
     existing.flight = flight;
-    if (selectedIcao === flight.icao24) updatePanel(flight);
+    if (selectedIcao === flight.icao24) {
+      updatePanel(flight);
+    }
+
+    const positions = trailPositions.get(flight.icao24) ?? [];
+    positions.push([flight.lat, flight.lon]);
+    if (positions.length > TRAIL_LENGTH) {
+      positions.shift();
+    }
+    trailPositions.set(flight.icao24, positions);
+
+    const existingTrail = trails.get(flight.icao24);
+    if (existingTrail) {
+      existingTrail.setLatLngs(positions);
+    } else {
+      const line = L.polyline(positions, { color: '#00d4ff', weight: 1, opacity: 0.4 }).addTo(map);
+      trails.set(flight.icao24, line);
+    }
   } else {
     const el = document.createElement('div');
     el.className = 'aircraft-marker';
@@ -63,6 +82,9 @@ const removeStaleMarkers = (activeIcaos: Set<string>) => {
   for (const [icao24, entry] of markers) {
     if (!activeIcaos.has(icao24)) {
       entry.marker.remove();
+      trails.get(icao24)?.remove();
+      trails.delete(icao24);
+      trailPositions.delete(icao24);
       markers.delete(icao24);
     }
   }
