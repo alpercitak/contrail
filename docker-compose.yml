@@ -62,8 +62,10 @@ services:
     working_dir: /app/apps/web
     volumes:
       - .:/app
-      - /app/node_modules
-      - /app/apps/web/node_modules
     ports:
       - "5173:5173"
+    environment:
+      VITE_WS_URL: ws://localhost:3001/ws
+    depends_on:
+      - gateway
     command: ["sh", "-c", "bun install && bun x vite --host 0.0.0.0"]

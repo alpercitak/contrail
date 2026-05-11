@@ -11,6 +11,13 @@ export interface FlightEvent {
   timestamp?: number; // unix ms
 }
 
+export interface BoundingBox {
+  latMin: number;
+  latMax: number;
+  lonMin: number;
+  lonMax: number;
+}
+
 export interface SnapshotMessage {
   type: 'snapshot';
   flights: Array<FlightEvent>;
@@ -21,6 +28,11 @@ export interface UpdateMessage {
   flight: FlightEvent;
 }
 
-export type GatewayMessage = SnapshotMessage | UpdateMessage;
+export interface ViewportMessage {
+  type: 'viewport';
+  bbox: BoundingBox;
+}
+
+export type GatewayMessage = SnapshotMessage | UpdateMessage | ViewportMessage;
 
 export type BBox = typeof BBOX;

@@ -27,6 +27,7 @@ const markers = new Map<string, MarkerEntry>();
 
 let selectedIcao: string | null = null;
 let updateCount = 0;
+let ws: WebSocket | null = null;
 let wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
 
 const upsertMarker = (flight: FlightEvent) => {
@@ -123,13 +124,32 @@ const setStatus = (status: Status) => {
   }
 };
 
+const sendViewport = () => {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    return;
+  }
+  const bounds = map.getBounds();
+  ws.send(
+    JSON.stringify({
+      type: 'viewport',
+      bbox: {
+        latMin: bounds.getSouth(),
+        latMax: bounds.getNorth(),
+        lonMin: bounds.getWest(),
+        lonMax: bounds.getEast(),
+      },
+    }),
+  );
+};
+
 const connectWS = () => {
   setStatus('connecting');
-  const ws = new WebSocket(WS_URL!);
+  ws = new WebSocket(WS_URL!);
 
   ws.addEventListener('open', () => {
     setStatus('online');
     wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
+    sendViewport();
   });
 
   ws.addEventListener('message', (e) => {
@@ -178,7 +198,10 @@ L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{
 L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
 document.getElementById('panel-close')!.addEventListener('click', deselect);
+
 map.on('click', deselect);
+map.on('moveend', sendViewport);
+map.on('zoomend', sendViewport);
 
 if (WS_URL) {
   connectWS();
