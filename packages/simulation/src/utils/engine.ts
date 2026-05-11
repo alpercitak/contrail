@@ -1,0 +1,31 @@
+import type { FlightEvent } from '@contrail/shared/types';
+import type { SimulationEngineConfig } from '../types';
+import { spawnFleet, tickAircraft, toFlightEvent } from './fleet';
+
+export class SimulationEngine {
+  private fleet: Map<string, FlightEvent>;
+  private config: SimulationEngineConfig;
+
+  constructor(config: SimulationEngineConfig) {
+    this.config = config;
+    this.fleet = spawnFleet(config.fleetSize);
+  }
+
+  // Advance all aircraft by one tick
+  tick(): Array<FlightEvent> {
+    const events: Array<FlightEvent> = [];
+
+    for (const [icao24, ac] of this.fleet) {
+      const updated = tickAircraft(ac, this.config.tickMs);
+      this.fleet.set(icao24, updated);
+      events.push(toFlightEvent(updated));
+    }
+
+    return events;
+  }
+
+  // Current snapshot
+  snapshot(): Array<FlightEvent> {
+    return Array.from(this.fleet.values()).map(toFlightEvent);
+  }
+}

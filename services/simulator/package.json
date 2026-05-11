@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@contrail/shared": "workspace:*",
+    "@contrail/simulation": "workspace:*",
     "ioredis": "catalog:"
   },
   "devDependencies": {

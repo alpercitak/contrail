@@ -24,6 +24,13 @@
       "name": "@contrail/shared",
       "version": "0.1.0",
     },
+    "packages/simulation": {
+      "name": "@contrail/simulation",
+      "version": "0.1.0",
+      "dependencies": {
+        "@contrail/shared": "workspace:",
+      },
+    },
     "services/api": {
       "name": "@contrail/api",
       "version": "0.1.0",
@@ -56,6 +63,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@contrail/shared": "workspace:*",
+        "@contrail/simulation": "workspace:*",
         "ioredis": "catalog:",
       },
       "devDependencies": {
@@ -77,6 +85,8 @@
     "@contrail/gateway": ["@contrail/gateway@workspace:services/gateway"],
 
     "@contrail/shared": ["@contrail/shared@workspace:packages/shared"],
+
+    "@contrail/simulation": ["@contrail/simulation@workspace:packages/simulation"],
 
     "@contrail/simulator": ["@contrail/simulator@workspace:services/simulator"],
 

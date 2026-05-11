@@ -1,8 +1,7 @@
 import Redis from 'ioredis';
 import { REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
-import type { FlightEvent } from '@contrail/shared/types';
 import { FLEET_SIZE, REDIS_URL, TICK_MS } from './constants';
-import { spawnAircraft, tickAircraft, toFlightEvent } from './utils';
+import { SimulationEngine } from '@contrail/simulation';
 
 const main = async () => {
   const redis = new Redis(REDIS_URL);
@@ -10,36 +9,24 @@ const main = async () => {
   redis.on('connect', () => console.log('[simulator] Redis connected'));
   redis.on('error', (err) => console.error('[simulator] Redis error', err));
 
-  // Spawn initial fleet
-  const fleet = new Map<string, FlightEvent>();
-  for (let i = 0; i < FLEET_SIZE; i++) {
-    const ac = spawnAircraft();
-    fleet.set(ac.icao24, ac);
-  }
+  const engine = new SimulationEngine({ fleetSize: FLEET_SIZE, tickMs: TICK_MS });
 
   console.log(`[simulator] Fleet of ${FLEET_SIZE} aircraft spawned`);
 
-  async function tick() {
+  const tick = async () => {
+    const events = engine.tick();
     const pipeline = redis.pipeline();
 
-    for (const [icao24, ac] of fleet) {
-      const updated = tickAircraft(ac);
-      fleet.set(icao24, updated);
-
-      const event = toFlightEvent(updated);
-      const serialized = JSON.stringify(event);
-
-      // Update current state in Redis hash
-      pipeline.hset(REDIS_FLIGHTS_KEY, icao24, serialized);
-      // Broadcast event to subscribers
+    for (const flight of events) {
+      const serialized = JSON.stringify(flight);
+      pipeline.hset(REDIS_FLIGHTS_KEY, flight.icao24, serialized);
       pipeline.publish(REDIS_CHANNEL, serialized);
     }
 
     await pipeline.exec();
-    console.log(`[simulator] tick — ${fleet.size} aircraft`);
-  }
+    console.log(`[simulator] tick — ${events.length} aircraft`);
+  };
 
-  // Initial tick immediately, then on interval
   await tick();
   setInterval(tick, TICK_MS);
 };
