@@ -16,14 +16,14 @@ await app.register(fastifyCors, {
 });
 
 // GET /flights — all current aircraft state
-app.get('/flights', async (_req, reply) => {
+app.get('/api/flights', async (_req, reply) => {
   const raw = await redis.hgetall(REDIS_FLIGHTS_KEY);
   const flights: FlightEvent[] = Object.values(raw).map((v) => JSON.parse(v));
   return reply.send(flights);
 });
 
 // GET /flights/:icao24 — single aircraft
-app.get<{ Params: { icao24: string } }>('/flights/:icao24', async (req, reply) => {
+app.get<{ Params: { icao24: string } }>('/api/flights/:icao24', async (req, reply) => {
   const raw = await redis.hget(REDIS_FLIGHTS_KEY, req.params.icao24);
   if (!raw) {
     return reply.status(404).send({ error: 'not found' });

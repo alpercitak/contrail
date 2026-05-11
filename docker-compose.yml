@@ -10,11 +10,9 @@ services:
       retries: 5
 
   api:
-    profiles: ["full"]
-    image: oven/bun:latest
-    working_dir: /app/services/api
-    volumes:
-      - .:/app
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
     ports:
       - "3002:3002"
     environment:
@@ -23,14 +21,11 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    command: bun run dev
 
   gateway:
-    profiles: ["full"]
-    image: oven/bun:latest
-    working_dir: /app/services/gateway
-    volumes:
-      - .:/app
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
     ports:
       - "3001:3001"
     environment:
@@ -39,14 +34,11 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    command: bun run dev
 
   simulator:
-    profiles: ["full"]
-    image: oven/bun:latest
-    working_dir: /app/services/simulator
-    volumes:
-      - .:/app
+    build:
+      context: .
+      dockerfile: services/simulator/Dockerfile
     environment:
       REDIS_URL: redis://redis:6379
       FLEET_SIZE: "150"
@@ -54,19 +46,15 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    command: bun run dev
 
   web:
-    profiles: ["full"]
-    image: oven/bun:latest
-    working_dir: /app/apps/web
-    volumes:
-      - .:/app
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
     ports:
-      - "5173:5173"
+      - "5173:80"
     environment:
-      VITE_WS_URL: ws://localhost:3001/ws
-      VITE_API_URL: http://localhost:3002
+      VITE_API_PROXY: http://api:3002
+      VITE_WS_PROXY: ws://gateway:3001
     depends_on:
       - gateway
-    command: ["sh", "-c", "bun install && bun x vite --host 0.0.0.0"]

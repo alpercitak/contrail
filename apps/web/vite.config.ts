@@ -1,16 +1,24 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
-export default defineConfig({
-  server: {
-    host: '0.0.0.0',
-    port: 5173,
-    hmr: {
-      host: 'localhost',
-      clientPort: 5173,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const runtimeMode = env.VITE_RUNTIME_MODE ?? 'demo';
+  return {
+    define: {
+      __RUNTIME_MODE__: JSON.stringify(runtimeMode),
     },
-    watch: {
-      usePolling: true,
-      interval: 100,
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3002',
+          changeOrigin: true,
+        },
+        '/ws': {
+          target: 'ws://localhost:3001',
+          ws: true,
+          changeOrigin: true,
+        },
+      },
     },
-  },
+  };
 });

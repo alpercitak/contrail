@@ -1,0 +1,63 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Bun
+bun.lock
+bun.lockb
+
+# Turbo
+.turbo
+
+# Build outputs
+dist
+**/dist
+build
+**/build
+
+# Logs
+logs
+*.log
+
+# Runtime env files (never bake secrets)
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode
+.idea
+
+# Testing / coverage
+coverage
+
+# Vite / frontend cache
+.vite
+**/.vite
+
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+
+# Dev tooling
+.npm
+.yarn
+.pnpm-store
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Turbo cache (important)
+.turbo
+
+# Optional: CI/CD
+.github

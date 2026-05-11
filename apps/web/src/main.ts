@@ -11,8 +11,7 @@ type MarkerEntry = {
   flight: FlightEvent;
 };
 
-const WS_URL = import.meta.env.VITE_WS_URL as string | undefined;
-const API_URL = import.meta.env.VITE_API_URL as string | undefined;
+const IS_DEMO = __RUNTIME_MODE__ === 'demo';
 const AIRCRAFT_SVG = `
   <div class="aircraft-icon-wrapper">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -155,6 +154,10 @@ const setStatus = (status: Status) => {
   const dot = document.getElementById('dot')!;
   const text = document.getElementById('status-text')!;
   dot.className = 'status-dot';
+  if (IS_DEMO) {
+    text.textContent = 'demo';
+    return;
+  }
   if (status === 'online') {
     dot.classList.add('online');
     text.textContent = 'live';
@@ -186,7 +189,7 @@ const sendViewport = () => {
 
 const connectWS = () => {
   setStatus('connecting');
-  ws = new WebSocket(WS_URL!);
+  ws = new WebSocket('/ws');
 
   ws.addEventListener('open', () => {
     setStatus('online');
@@ -219,7 +222,7 @@ const connectWS = () => {
 };
 
 const init = async () => {
-  const res = await fetch(`${API_URL}/flights`);
+  const res = await fetch(`/api/flights`);
   const flights: Array<FlightEvent> = await res.json();
   for (const flight of flights) {
     upsertMarker(flight);
@@ -256,8 +259,8 @@ map.on('click', deselect);
 map.on('moveend', sendViewport);
 map.on('zoomend', sendViewport);
 
-if (WS_URL) {
-  init();
-} else {
+if (IS_DEMO) {
   startDemo();
+} else {
+  init();
 }
