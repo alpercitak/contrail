@@ -25,6 +25,11 @@ const main = async () => {
   redis.on('connect', () => console.log('[simulator] Redis connected'));
   redis.on('error', (err) => console.error('[simulator] Redis error', err));
 
+  await redis.del(REDIS_FLIGHTS_KEY);
+  console.log('[simulator] Cleared previous fleet');
+
+  await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
+
   const engine = new SimulationEngine({ fleetSize: FLEET_SIZE, tickMs: TICK_MS });
 
   console.log(`[simulator] Fleet of ${FLEET_SIZE} aircraft spawned`);

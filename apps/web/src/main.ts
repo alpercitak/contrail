@@ -157,7 +157,9 @@ const connectWS = () => {
 
     if (msg.type === 'snapshot') {
       removeStaleMarkers(new Set(msg.flights.map((f) => f.icao24)));
-      for (const flight of msg.flights) upsertMarker(flight);
+      for (const flight of msg.flights) {
+        upsertMarker(flight);
+      }
       resetUpdates();
     } else if (msg.type === 'update') {
       upsertMarker(msg.flight);
