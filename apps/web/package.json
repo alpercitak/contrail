@@ -9,9 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@contrail/shared": "workspace:"
+    "@contrail/shared": "workspace:",
+    "@contrail/simulation": "workspace:",
+    "leaflet": "^1.9.4"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.21",
     "typescript": "catalog:",
     "vite": "^8.0.10"
   }

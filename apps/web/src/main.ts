@@ -1,44 +1,48 @@
-import type { FlightEvent } from '@contrail/shared/types';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import type { FlightEvent, GatewayMessage } from '@contrail/shared/types';
 
 type Status = 'online' | 'connecting' | 'error';
 
-const WS_URL = 'ws://localhost:3001/ws';
+type MarkerEntry = {
+  marker: L.Marker;
+  el: HTMLDivElement;
+  flight: FlightEvent;
+};
 
-const AIRCRAFT_SVG = `<div class="aircraft-icon-wrapper">
+const WS_URL = import.meta.env.VITE_WS_URL as string | undefined;
+
+const AIRCRAFT_SVG = `
+  <div class="aircraft-icon-wrapper">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/>
     </svg>
   </div>`;
 
-const map = new maplibregl.Map({
-  container: 'map',
-  style: 'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json',
-  center: [10, 52],
-  zoom: 4,
-  minZoom: 3,
+let wsRetryDelay = 1000;
+
+const map = L.map('map', { zoomControl: false }).setView([52, 10], 4);
+
+L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+  attribution: '',
   maxZoom: 10,
-});
+}).addTo(map);
 
-map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-const markers = new Map(); // icao24 → { marker, el }
+const markers = new Map<string, MarkerEntry>();
 let selectedIcao: string | null = null;
 let updateCount = 0;
-let updatesThisMinute = 0;
 
 const upsertMarker = (flight: FlightEvent) => {
   const existing = markers.get(flight.icao24);
 
   if (existing) {
-    existing.marker.setLngLat([flight.lon, flight.lat]);
+    existing.marker.setLatLng([flight.lat, flight.lon]);
     const wrapper = existing.el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
-    if (wrapper) {
-      wrapper.style.transform = `rotate(${flight.heading}deg)`;
-    }
+    if (wrapper) wrapper.style.transform = `rotate(${flight.heading}deg)`;
     existing.flight = flight;
-    if (selectedIcao === flight.icao24) {
-      updatePanel(flight);
-    }
+    if (selectedIcao === flight.icao24) updatePanel(flight);
   } else {
     const el = document.createElement('div');
     el.className = 'aircraft-marker';
@@ -52,19 +56,25 @@ const upsertMarker = (flight: FlightEvent) => {
       selectAircraft(flight.icao24);
     });
 
-    const marker = new maplibregl.Marker({ element: el, anchor: 'center', rotationAlignment: 'map' })
-      .setLngLat([flight.lon, flight.lat])
-      .addTo(map);
+    const icon = L.divIcon({ html: el, className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+    const marker = L.marker([flight.lat, flight.lon], { icon }).addTo(map);
 
     markers.set(flight.icao24, { marker, el, flight });
   }
 };
 
+const removeStaleMarkers = (activeIcaos: Set<string>) => {
+  for (const [icao24, entry] of markers) {
+    if (!activeIcaos.has(icao24)) {
+      entry.marker.remove();
+      markers.delete(icao24);
+    }
+  }
+};
+
 const selectAircraft = (icao24: string) => {
-  // Deselect previous
   if (selectedIcao && markers.has(selectedIcao)) {
-    const prev = markers.get(selectedIcao);
-    prev.el.classList.remove('selected');
+    markers.get(selectedIcao)!.el.classList.remove('selected');
   }
 
   selectedIcao = icao24;
@@ -76,6 +86,14 @@ const selectAircraft = (icao24: string) => {
   document.getElementById('panel')!.classList.add('visible');
 };
 
+const deselect = () => {
+  if (selectedIcao && markers.has(selectedIcao)) {
+    markers.get(selectedIcao)!.el.classList.remove('selected');
+  }
+  selectedIcao = null;
+  document.getElementById('panel')!.classList.remove('visible');
+};
+
 const updatePanel = (flight: FlightEvent) => {
   document.getElementById('p-callsign')!.textContent = flight.callsign;
   document.getElementById('p-icao')!.textContent = flight.icao24;
@@ -85,9 +103,14 @@ const updatePanel = (flight: FlightEvent) => {
   document.getElementById('p-pos')!.textContent = `${flight.lat.toFixed(2)}, ${flight.lon.toFixed(2)}`;
 };
 
-const updateHUD = () => {
-  document.getElementById('count')!.textContent = String(markers.size);
-  document.getElementById('updates')!.textContent = String(updatesThisMinute);
+const incrementUpdates = () => {
+  updateCount++;
+  document.getElementById('updates')!.textContent = String(updateCount);
+};
+
+const resetUpdates = () => {
+  updateCount = 0;
+  document.getElementById('updates')!.textContent = '0';
 };
 
 const setStatus = (status: Status) => {
@@ -105,53 +128,58 @@ const setStatus = (status: Status) => {
   }
 };
 
-const connect = () => {
+const connectWS = () => {
   setStatus('connecting');
-  const ws = new WebSocket(WS_URL);
+  const ws = new WebSocket(WS_URL!);
 
-  ws.addEventListener('open', () => setStatus('online'));
+  ws.addEventListener('open', () => {
+    setStatus('online');
+    wsRetryDelay = 1000;
+  });
 
   ws.addEventListener('message', (e) => {
-    const msg = JSON.parse(e.data);
+    const msg = JSON.parse(e.data) as GatewayMessage;
 
     if (msg.type === 'snapshot') {
-      for (const flight of msg.flights) {
-        upsertMarker(flight);
-      }
-      updateHUD();
+      removeStaleMarkers(new Set(msg.flights.map((f) => f.icao24)));
+      for (const flight of msg.flights) upsertMarker(flight);
+      resetUpdates();
     } else if (msg.type === 'update') {
       upsertMarker(msg.flight);
-      updateCount++;
+      incrementUpdates();
     }
   });
 
   ws.addEventListener('close', () => {
     setStatus('error');
-    setTimeout(connect, 3000); // auto-reconnect
+    setTimeout(connectWS, wsRetryDelay);
+    wsRetryDelay = Math.min(wsRetryDelay * 2, 30000);
   });
 
   ws.addEventListener('error', () => setStatus('error'));
 };
 
-// Close panel
-document.getElementById('panel-close')!.addEventListener('click', () => {
-  if (selectedIcao && markers.has(selectedIcao)) {
-    const entry = markers.get(selectedIcao);
-    entry.el.classList.remove('selected');
-  }
-  selectedIcao = null;
-  document.getElementById('panel')!.classList.remove('visible');
-});
+const startDemo = async () => {
+  const { SimulationEngine } = await import('@contrail/simulation');
+  const engine = new SimulationEngine({ fleetSize: 150, tickMs: 5000 });
 
-// Click map to deselect
-map.on('click', () => {
-  document.getElementById('panel-close')!.click();
-});
+  for (const flight of engine.snapshot()) upsertMarker(flight);
 
-map.on('load', connect);
+  setInterval(() => {
+    for (const flight of engine.tick()) {
+      upsertMarker(flight);
+      incrementUpdates();
+    }
+  }, 5000);
 
-setInterval(() => {
-  updatesThisMinute = updateCount;
-  updateCount = 0;
-  updateHUD();
-}, 60000);
+  setStatus('online');
+};
+
+document.getElementById('panel-close')!.addEventListener('click', deselect);
+map.on('click', deselect);
+
+if (WS_URL) {
+  connectWS();
+} else {
+  startDemo();
+}
