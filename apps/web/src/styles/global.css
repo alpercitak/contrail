@@ -30,6 +30,14 @@ body {
   overflow: hidden;
 }
 
+.text--primary {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
 #map {
   position: absolute;
   inset: 0;
@@ -55,11 +63,6 @@ body {
   text-transform: uppercase;
 }
 
-.hud-stats {
-  display: flex;
-  gap: 16px;
-}
-
 .stat {
   background: rgba(10, 12, 15, 0.85);
   border: 1px solid var(--border);
@@ -68,39 +71,34 @@ body {
   backdrop-filter: blur(8px);
 }
 
-.stat-value {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--accent);
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-top: 2px;
-}
-
 #status {
   position: absolute;
   top: 16px;
   right: 16px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  background: rgba(10, 12, 15, 0.85);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 6px 12px;
-  backdrop-filter: blur(8px);
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--text-muted);
   z-index: 800;
+}
+
+#status-text {
+  text-transform: uppercase;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(10, 12, 15, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+  text-transform: uppercase;
 }
 
 .status-dot {

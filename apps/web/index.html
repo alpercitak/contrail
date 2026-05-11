@@ -13,25 +13,21 @@
   <div id="map"></div>
   <div id="hud">
     <div class="hud-logo">contrail</div>
-    <div class="hud-stats">
-      <div class="stat">
-        <div class="stat-value" id="count">0</div>
-        <div class="stat-label">Aircraft</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value" id="updates">0</div>
-        <div class="stat-label">Updates/min</div>
-      </div>
-    </div>
   </div>
   <div id="status">
-    <div class="status-dot" id="dot"></div>
-    <span id="status-text">connecting</span>
+    <div class="status-item">
+      <span>Updates</span>
+      <div class="text--primary" id="updates">0</div>
+    </div>
+    <div class="status-item">
+      <div class="status-dot" id="dot"></div>
+      <span id="status-text">connecting</span>
+    </div>
   </div>
   <div id="panel">
   <div class="panel-header">
     <div>
-      <div class="panel-callsign" id="p-callsign">—</div>
+      <div class="text--primary" id="p-callsign">—</div>
       <div class="panel-icao" id="p-icao">—</div>
     </div>
     <button class="panel-close" id="panel-close">✕</button>
