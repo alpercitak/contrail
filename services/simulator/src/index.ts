@@ -2,6 +2,22 @@ import Redis from 'ioredis';
 import { REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
 import { FLEET_SIZE, REDIS_URL, TICK_MS } from './constants';
 import { SimulationEngine } from '@contrail/simulation';
+import type { FlightEvent } from '@contrail/shared';
+
+const cleanStaleFlights = async (redis: Redis) => {
+  const raw = await redis.hgetall(REDIS_FLIGHTS_KEY);
+  const now = Date.now();
+  const staleMs = TICK_MS * 3;
+
+  const pipeline = redis.pipeline();
+  for (const [icao24, value] of Object.entries(raw)) {
+    const flight = JSON.parse(value) as FlightEvent;
+    if (now - flight.timestamp! > staleMs) {
+      pipeline.hdel(REDIS_FLIGHTS_KEY, icao24);
+    }
+  }
+  await pipeline.exec();
+};
 
 const main = async () => {
   const redis = new Redis(REDIS_URL);
@@ -24,6 +40,7 @@ const main = async () => {
     }
 
     await pipeline.exec();
+    await cleanStaleFlights(redis);
     console.log(`[simulator] tick — ${events.length} aircraft`);
   };
 
