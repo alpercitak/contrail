@@ -30,51 +30,58 @@ let updateCount = 0;
 let ws: WebSocket | null = null;
 let wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
 
+const updateMarker = (flight: FlightEvent, markerEntry: MarkerEntry) => {
+  markerEntry.marker.setLatLng([flight.lat, flight.lon]);
+  const wrapper = markerEntry.el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
+  if (wrapper) {
+    wrapper.style.transform = `rotate(${flight.heading}deg)`;
+  }
+  markerEntry.flight = flight;
+  if (selectedIcao === flight.icao24) {
+    updatePanel(flight);
+  }
+
+  const positions = trailPositions.get(flight.icao24) ?? [];
+  positions.push([flight.lat, flight.lon]);
+  if (positions.length > TRAIL_LENGTH) {
+    positions.shift();
+  }
+  trailPositions.set(flight.icao24, positions);
+
+  const existingTrail = trails.get(flight.icao24);
+  if (existingTrail) {
+    existingTrail.setLatLngs(positions);
+  } else {
+    const line = L.polyline(positions, { color: '#00d4ff', weight: 1, opacity: 0.4 }).addTo(map);
+    trails.set(flight.icao24, line);
+  }
+};
+
+const createMarker = (flight: FlightEvent) => {
+  const el = document.createElement('div');
+  el.className = 'aircraft-marker';
+  el.innerHTML = AIRCRAFT_SVG;
+
+  const wrapper = el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
+  wrapper.style.transform = `rotate(${flight.heading}deg)`;
+
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectAircraft(flight.icao24);
+  });
+
+  const icon = L.divIcon({ html: el, className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+  const marker = L.marker([flight.lat, flight.lon], { icon }).addTo(map);
+
+  markers.set(flight.icao24, { marker, el, flight });
+};
+
 const upsertMarker = (flight: FlightEvent) => {
   const existing = markers.get(flight.icao24);
-
   if (existing) {
-    existing.marker.setLatLng([flight.lat, flight.lon]);
-    const wrapper = existing.el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
-    if (wrapper) {
-      wrapper.style.transform = `rotate(${flight.heading}deg)`;
-    }
-    existing.flight = flight;
-    if (selectedIcao === flight.icao24) {
-      updatePanel(flight);
-    }
-
-    const positions = trailPositions.get(flight.icao24) ?? [];
-    positions.push([flight.lat, flight.lon]);
-    if (positions.length > TRAIL_LENGTH) {
-      positions.shift();
-    }
-    trailPositions.set(flight.icao24, positions);
-
-    const existingTrail = trails.get(flight.icao24);
-    if (existingTrail) {
-      existingTrail.setLatLngs(positions);
-    } else {
-      const line = L.polyline(positions, { color: '#00d4ff', weight: 1, opacity: 0.4 }).addTo(map);
-      trails.set(flight.icao24, line);
-    }
+    updateMarker(flight, existing);
   } else {
-    const el = document.createElement('div');
-    el.className = 'aircraft-marker';
-    el.innerHTML = AIRCRAFT_SVG;
-
-    const wrapper = el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
-    wrapper.style.transform = `rotate(${flight.heading}deg)`;
-
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      selectAircraft(flight.icao24);
-    });
-
-    const icon = L.divIcon({ html: el, className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
-    const marker = L.marker([flight.lat, flight.lon], { icon }).addTo(map);
-
-    markers.set(flight.icao24, { marker, el, flight });
+    createMarker(flight);
   }
 };
 
@@ -97,7 +104,9 @@ const selectAircraft = (icao24: string) => {
 
   selectedIcao = icao24;
   const entry = markers.get(icao24);
-  if (!entry) return;
+  if (!entry) {
+    return;
+  }
 
   entry.el.classList.add('selected');
   updatePanel(entry.flight);
