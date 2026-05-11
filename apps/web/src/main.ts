@@ -2,6 +2,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DEFAULT_FLEET_SIZE, DEFAULT_TICK_MS } from '@contrail/shared/constants';
 import type { FlightEvent, GatewayMessage } from '@contrail/shared/types';
+import { DOM } from './utils/dom';
 
 type Status = 'online' | 'connecting' | 'error';
 
@@ -111,7 +112,7 @@ const selectAircraft = (icao24: string) => {
 
   entry.el.classList.add('selected');
   updatePanel(entry.flight);
-  document.getElementById('panel')!.classList.add('visible');
+  DOM.panel.classList.add('visible');
 };
 
 const deselect = () => {
@@ -119,16 +120,16 @@ const deselect = () => {
     markers.get(selectedIcao)!.el.classList.remove('selected');
   }
   selectedIcao = null;
-  document.getElementById('panel')!.classList.remove('visible');
+  DOM.panel.classList.remove('visible');
 };
 
 const updatePanel = (flight: FlightEvent) => {
-  document.getElementById('p-callsign')!.textContent = flight.callsign;
-  document.getElementById('p-icao')!.textContent = flight.icao24;
-  document.getElementById('p-alt')!.textContent = `${Math.round(flight.altitude).toLocaleString()} m`;
-  document.getElementById('p-spd')!.textContent = `${Math.round(flight.speed)} km/h`;
-  document.getElementById('p-hdg')!.textContent = `${Math.round(flight.heading)}°`;
-  document.getElementById('p-pos')!.textContent = `${flight.lat.toFixed(2)}, ${flight.lon.toFixed(2)}`;
+  DOM.callsign.textContent = flight.callsign;
+  DOM.icao.textContent = flight.icao24;
+  DOM.alt.textContent = `${Math.round(flight.altitude).toLocaleString()} m`;
+  DOM.spd.textContent = `${Math.round(flight.speed)} km/h`;
+  DOM.hdg.textContent = `${Math.round(flight.heading)}°`;
+  DOM.pos.textContent = `${flight.lat.toFixed(2)}, ${flight.lon.toFixed(2)}`;
 };
 
 const animateCount = (el: HTMLElement, target: number) => {
@@ -142,30 +143,28 @@ const animateCount = (el: HTMLElement, target: number) => {
 
 const incrementUpdates = () => {
   updateCount++;
-  animateCount(document.getElementById('updates')!, updateCount);
+  animateCount(DOM.updates, updateCount);
 };
 
 const resetUpdates = () => {
   updateCount = 0;
-  document.getElementById('updates')!.textContent = '0';
+  DOM.updates.textContent = '0';
 };
 
 const setStatus = (status: Status) => {
-  const dot = document.getElementById('dot')!;
-  const text = document.getElementById('status-text')!;
-  dot.className = 'status-dot';
+  DOM.dot.className = 'status-dot';
   if (IS_DEMO) {
-    text.textContent = 'demo';
+    DOM.statusText.textContent = 'demo';
     return;
   }
   if (status === 'online') {
-    dot.classList.add('online');
-    text.textContent = 'live';
+    DOM.dot.classList.add('online');
+    DOM.statusText.textContent = 'live';
   } else if (status === 'error') {
-    dot.classList.add('error');
-    text.textContent = 'disconnected';
+    DOM.dot.classList.add('error');
+    DOM.statusText.textContent = 'disconnected';
   } else {
-    text.textContent = 'connecting…';
+    DOM.statusText.textContent = 'connecting…';
   }
 };
 
@@ -253,7 +252,7 @@ L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{
 
 L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-document.getElementById('panel-close')!.addEventListener('click', deselect);
+DOM.panelClose.addEventListener('click', deselect);
 
 map.on('click', deselect);
 map.on('moveend', sendViewport);
