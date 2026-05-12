@@ -13,6 +13,7 @@ export const DOM = {
   panelClose: mustGet<HTMLButtonElement>('panel-close'),
 
   updates: mustGet<HTMLSpanElement>('updates'),
+  statusAircrafts: mustGet<HTMLSpanElement>('status-aircrafts'),
 
   dot: mustGet<HTMLDivElement>('dot'),
   statusText: mustGet<HTMLSpanElement>('status-text'),

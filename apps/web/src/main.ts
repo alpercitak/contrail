@@ -87,7 +87,14 @@ const createMarker = (flight: FlightEvent) => {
 };
 
 const upsertMarker = (flight: FlightEvent) => {
+  const inView = map.getBounds().contains([flight.lat, flight.lon]);
   const existing = markers.get(flight.icao24);
+
+  if (!inView && existing) {
+    removeMarker(flight.icao24);
+    return;
+  }
+
   if (existing) {
     updateMarker(flight, existing);
   } else {
@@ -95,14 +102,19 @@ const upsertMarker = (flight: FlightEvent) => {
   }
 };
 
+const removeMarker = (icao24: string) => {
+  markers.get(icao24)?.marker.remove();
+  trails.get(icao24)?.remove();
+  markers.delete(icao24);
+  trails.delete(icao24);
+  trailPositions.delete(icao24);
+};
+
 const removeStaleMarkers = (activeIcaos: Set<string>) => {
   for (const [icao24, entry] of markers) {
     if (!activeIcaos.has(icao24)) {
       entry.marker.remove();
-      trails.get(icao24)?.remove();
-      trails.delete(icao24);
-      trailPositions.delete(icao24);
-      markers.delete(icao24);
+      removeMarker(icao24);
     }
   }
 };
@@ -157,6 +169,25 @@ const incrementUpdates = () => {
 const resetUpdates = () => {
   updateCount = 0;
   DOM.updates.textContent = '0';
+};
+
+const cullOutOfViewport = () => {
+  const bounds = map.getBounds();
+  for (const [icao24, entry] of markers) {
+    if (!bounds.contains([entry.flight.lat, entry.flight.lon])) {
+      removeMarker(icao24);
+    }
+  }
+};
+
+const updateAircraftCount = () => {
+  DOM.statusAircrafts.textContent = String(markers.size);
+};
+
+const onViewportChange = () => {
+  cullOutOfViewport();
+  sendViewport();
+  updateAircraftCount();
 };
 
 const setStatus = (status: Status) => {
@@ -266,8 +297,8 @@ L.control.zoom({ position: 'bottomleft' }).addTo(map);
 DOM.panelClose.addEventListener('click', deselect);
 
 map.on('click', deselect);
-map.on('moveend', sendViewport);
-map.on('zoomend', sendViewport);
+map.on('moveend', onViewportChange);
+map.on('zoomend', onViewportChange);
 
 if (IS_DEMO) {
   startDemo();
