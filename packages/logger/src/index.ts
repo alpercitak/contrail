@@ -11,5 +11,5 @@ export const createLogger = (name: string) =>
   pino({
     name,
     level: process.env.LOG_LEVEL ?? 'info',
-    transport: process.env.NODE_ENV !== 'production' ? DEV_TRANSPORT : undefined,
+    transport: process.env.NODE_ENV === 'development' ? DEV_TRANSPORT : undefined,
   });
