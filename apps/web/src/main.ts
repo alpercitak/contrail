@@ -13,12 +13,6 @@ type MarkerEntry = {
 };
 
 const IS_DEMO = __RUNTIME_MODE__ === 'demo';
-const AIRCRAFT_SVG = `
-  <div class="aircraft-icon-wrapper">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <path d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/>
-    </svg>
-  </div>`;
 const DEFAULT_WS_RETRY_DELAY = 1000;
 const TRAIL_LENGTH = 10;
 
@@ -32,11 +26,25 @@ let updateCount = 0;
 let ws: WebSocket | null = null;
 let wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
 
+const getAircraftSVG = (color: string) => `
+  <div class="aircraft-icon-wrapper">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}">
+      <path d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/>
+    </svg>
+  </div>`;
+
+const altitudeColor = (altitude: number): string => {
+  if (altitude < 3000) return '#f59e0b'; // low — amber
+  if (altitude < 8000) return '#22c55e'; // mid — green
+  return '#00d4ff'; // high cruise — cyan (existing default)
+};
+
 const updateMarker = (flight: FlightEvent, markerEntry: MarkerEntry) => {
   markerEntry.marker.setLatLng([flight.lat, flight.lon]);
   const wrapper = markerEntry.el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
   if (wrapper) {
     wrapper.style.transform = `rotate(${flight.heading}deg)`;
+    wrapper.innerHTML = getAircraftSVG(altitudeColor(flight.altitude));
   }
   markerEntry.flight = flight;
   if (selectedIcao === flight.icao24) {
@@ -62,7 +70,7 @@ const updateMarker = (flight: FlightEvent, markerEntry: MarkerEntry) => {
 const createMarker = (flight: FlightEvent) => {
   const el = document.createElement('div');
   el.className = 'aircraft-marker';
-  el.innerHTML = AIRCRAFT_SVG;
+  el.innerHTML = getAircraftSVG(altitudeColor(flight.altitude));
 
   const wrapper = el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
   wrapper.style.transform = `rotate(${flight.heading}deg)`;
