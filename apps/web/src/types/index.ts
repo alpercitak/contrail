@@ -7,7 +7,7 @@ export type MarkerEntry = {
   flight: FlightEvent;
 };
 
-export type Status = 'online' | 'connecting' | 'error';
+export type Status = 'online' | 'connecting' | 'error' | 'demo';
 
 export type InterpolationState = {
   fromLat: number;
