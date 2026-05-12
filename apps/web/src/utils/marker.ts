@@ -10,7 +10,7 @@ import { updateAircraftCount } from './hud';
 export const markers = new Map<string, MarkerEntry>();
 let selectedIcao: string | null = null;
 
-const altitudeColor = (altitude: number): string => {
+const getAltitudeColor = (altitude: number): string => {
   if (altitude < 3000) return '#f59e0b';
   if (altitude < 8000) return '#22c55e';
   return '#00d4ff';
@@ -36,7 +36,7 @@ const updateMarker = (flight: FlightEvent, markerEntry: MarkerEntry) => {
   const wrapper = markerEntry.el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
   if (wrapper) {
     wrapper.style.transform = `rotate(${flight.heading}deg)`;
-    wrapper.innerHTML = getAircraftSVG(altitudeColor(flight.altitude));
+    wrapper.innerHTML = getAircraftSVG(getAltitudeColor(flight.altitude));
   }
   startInterpolation(flight, markerEntry);
   markerEntry.flight = flight;
@@ -50,7 +50,7 @@ const updateMarker = (flight: FlightEvent, markerEntry: MarkerEntry) => {
 const createMarker = (flight: FlightEvent) => {
   const el = document.createElement('div');
   el.className = 'aircraft-marker';
-  el.innerHTML = getAircraftSVG(altitudeColor(flight.altitude));
+  el.innerHTML = getAircraftSVG(getAltitudeColor(flight.altitude));
 
   const wrapper = el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
   wrapper.style.transform = `rotate(${flight.heading}deg)`;
