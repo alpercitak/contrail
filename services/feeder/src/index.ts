@@ -39,12 +39,16 @@ const main = async () => {
 
   await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
 
-  const engine = new FeedMock({ fleetSize: FLEET_SIZE, tickMs: TICK_MS });
+  const feedMock = new FeedMock({ fleetSize: FLEET_SIZE, tickMs: TICK_MS });
+
+  for (const flight of feedMock.snapshot()) {
+    await redis.hset(REDIS_FLIGHTS_KEY, flight.icao24, JSON.stringify(flight));
+  }
 
   console.log(`[feeder] Fleet of ${FLEET_SIZE} aircraft spawned`);
 
   const tick = async () => {
-    const events = engine.tick();
+    const events = await feedMock.fetch();
     const pipeline = redis.pipeline();
 
     for (const flight of events) {

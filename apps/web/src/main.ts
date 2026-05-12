@@ -231,12 +231,15 @@ const init = async () => {
 
 const startDemo = async () => {
   const { FeedMock } = await import('@contrail/feed-mock');
-  const engine = new FeedMock({ fleetSize: DEFAULT_FLEET_SIZE, tickMs: DEFAULT_TICK_MS });
+  const feedMock = new FeedMock({ fleetSize: DEFAULT_FLEET_SIZE, tickMs: DEFAULT_TICK_MS });
 
-  for (const flight of engine.snapshot()) upsertMarker(flight);
+  for (const flight of feedMock.snapshot()) {
+    upsertMarker(flight);
+  }
 
-  setInterval(() => {
-    for (const flight of engine.tick()) {
+  setInterval(async () => {
+    const events = await feedMock.fetch();
+    for (const flight of events) {
       upsertMarker(flight);
       incrementUpdates();
     }
