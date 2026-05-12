@@ -1,7 +1,6 @@
-import type { FlightEvent } from '@contrail/shared';
+import { DEFAULT_TICK_MS } from '@contrail/shared/constants';
+import type { FlightEvent } from '@contrail/shared/types';
 import type { InterpolationState, MarkerEntry } from '../types';
-
-const TICK_MS = 5000;
 
 const interpolationStates = new Map<string, InterpolationState>();
 
@@ -36,7 +35,7 @@ const startInterpolation = (flight: FlightEvent, existing: MarkerEntry) => {
   };
 
   const frame = (now: number) => {
-    const t = Math.min((now - state.startTime) / TICK_MS, 1);
+    const t = Math.min((now - state.startTime) / DEFAULT_TICK_MS, 1);
     existing.marker.setLatLng([lerp(state.fromLat, state.toLat, t), lerp(state.fromLon, state.toLon, t)]);
     if (wrapper) {
       const heading = lerpHeading(state.fromHeading, state.toHeading, t);
