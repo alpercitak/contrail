@@ -266,6 +266,7 @@ const init = async () => {
     upsertMarker(flight);
   }
   connectWS();
+  updateAircraftCount();
 };
 
 const startDemo = async () => {
@@ -285,6 +286,7 @@ const startDemo = async () => {
   }, DEFAULT_TICK_MS);
 
   setStatus('online');
+  updateAircraftCount();
 };
 
 L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
