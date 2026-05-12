@@ -4,8 +4,10 @@ import { DEFAULT_FLEET_SIZE, DEFAULT_TICK_MS } from '@contrail/shared/constants'
 import type { FlightEvent, GatewayMessage } from '@contrail/shared/types';
 import type { MarkerEntry, Status } from './types';
 import { DOM } from './utils/dom';
+import { incrementUpdates, resetUpdates, updateAircraftCount } from './utils/hud';
 import { removeInterpolation, startInterpolation } from './utils/interpolation';
 import { map } from './utils/map';
+import { hidePanel, showPanel, updatePanel } from './utils/panel';
 import { addTrailPoint, removeTrail } from './utils/trail';
 
 const IS_DEMO = __RUNTIME_MODE__ === 'demo';
@@ -14,7 +16,6 @@ const DEFAULT_WS_RETRY_DELAY = 1000;
 const markers = new Map<string, MarkerEntry>();
 
 let selectedIcao: string | null = null;
-let updateCount = 0;
 let ws: WebSocket | null = null;
 let wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
 
@@ -111,7 +112,7 @@ const selectAircraft = (icao24: string) => {
 
   entry.el.classList.add('selected');
   updatePanel(entry.flight);
-  DOM.panel.classList.add('visible');
+  showPanel();
 };
 
 const deselect = () => {
@@ -119,16 +120,7 @@ const deselect = () => {
     markers.get(selectedIcao)!.el.classList.remove('selected');
   }
   selectedIcao = null;
-  DOM.panel.classList.remove('visible');
-};
-
-const updatePanel = (flight: FlightEvent) => {
-  DOM.callsign.textContent = flight.callsign;
-  DOM.icao.textContent = flight.icao24;
-  DOM.alt.textContent = `${Math.round(flight.altitude).toLocaleString()} m`;
-  DOM.spd.textContent = `${Math.round(flight.speed)} km/h`;
-  DOM.hdg.textContent = `${Math.round(flight.heading)}°`;
-  DOM.pos.textContent = `${flight.lat.toFixed(2)}, ${flight.lon.toFixed(2)}`;
+  hidePanel();
 };
 
 const animateCount = (el: HTMLElement, target: number) => {
@@ -140,16 +132,6 @@ const animateCount = (el: HTMLElement, target: number) => {
   setTimeout(() => animateCount(el, target), 300);
 };
 
-const incrementUpdates = () => {
-  updateCount++;
-  animateCount(DOM.updates, updateCount);
-};
-
-const resetUpdates = () => {
-  updateCount = 0;
-  DOM.updates.textContent = '0';
-};
-
 const cullOutOfViewport = () => {
   const bounds = map.getBounds();
   for (const [icao24, entry] of markers) {
@@ -159,14 +141,10 @@ const cullOutOfViewport = () => {
   }
 };
 
-const updateAircraftCount = () => {
-  DOM.statusAircrafts.textContent = String(markers.size);
-};
-
 const onViewportChange = () => {
   cullOutOfViewport();
   sendViewport();
-  updateAircraftCount();
+  updateAircraftCount(markers.size);
 };
 
 const setStatus = (status: Status) => {
@@ -245,14 +223,15 @@ const init = async () => {
     upsertMarker(flight);
   }
   connectWS();
-  updateAircraftCount();
+  updateAircraftCount(flights.length);
 };
 
 const startDemo = async () => {
   const { FeedMock } = await import('@contrail/feed-mock');
   const feedMock = new FeedMock({ fleetSize: DEFAULT_FLEET_SIZE, tickMs: DEFAULT_TICK_MS });
+  const flights = feedMock.snapshot();
 
-  for (const flight of feedMock.snapshot()) {
+  for (const flight of flights) {
     upsertMarker(flight);
   }
 
@@ -265,7 +244,7 @@ const startDemo = async () => {
   }, DEFAULT_TICK_MS);
 
   setStatus('online');
-  updateAircraftCount();
+  updateAircraftCount(flights.length);
 };
 
 DOM.panelClose.addEventListener('click', deselect);
