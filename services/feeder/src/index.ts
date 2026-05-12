@@ -1,4 +1,6 @@
 import Redis from 'ioredis';
+import { FeedMock } from '@contrail/feed-mock';
+import { createLogger } from '@contrail/logger';
 import {
   DEFAULT_FLEET_SIZE,
   DEFAULT_REDIS_URL,
@@ -7,7 +9,8 @@ import {
   REDIS_FLIGHTS_KEY,
 } from '@contrail/shared/constants';
 import type { FlightEvent } from '@contrail/shared/types';
-import { FeedMock } from '@contrail/feed-mock';
+
+const logger = createLogger('feeder');
 
 const FLEET_SIZE = process.env.FLEET_SIZE ? Number.parseInt(process.env.FLEET_SIZE) : DEFAULT_FLEET_SIZE;
 const TICK_MS = process.env.TICK_MS ? Number.parseInt(process.env.TICK_MS) : DEFAULT_TICK_MS;
@@ -31,11 +34,11 @@ const cleanStaleFlights = async (redis: Redis) => {
 const main = async () => {
   const redis = new Redis(REDIS_URL);
 
-  redis.on('connect', () => console.log('[feeder] Redis connected'));
-  redis.on('error', (err) => console.error('[feeder] Redis error', err));
+  redis.on('connect', () => logger.info('Redis connected'));
+  redis.on('error', (err) => logger.error(`Redis error: ${err}`));
 
   await redis.del(REDIS_FLIGHTS_KEY);
-  console.log('[feeder] Cleared previous fleet');
+  logger.info('Cleared previous fleet');
 
   await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
 
@@ -45,7 +48,7 @@ const main = async () => {
     await redis.hset(REDIS_FLIGHTS_KEY, flight.icao24, JSON.stringify(flight));
   }
 
-  console.log(`[feeder] Fleet of ${FLEET_SIZE} aircraft spawned`);
+  logger.info(`Fleet of ${FLEET_SIZE} aircraft spawned`);
 
   const tick = async () => {
     const events = await feedMock.fetch();
@@ -59,7 +62,7 @@ const main = async () => {
 
     await pipeline.exec();
     await cleanStaleFlights(redis);
-    console.log(`[feeder] tick — ${events.length} aircraft`);
+    logger.info(`Tick: ${events.length} aircraft`);
   };
 
   await tick();
@@ -67,6 +70,6 @@ const main = async () => {
 };
 
 main().catch((err) => {
-  console.error('[feeder] fatal', err);
+  logger.error(`Fatal: ${err}`);
   process.exit(1);
 });

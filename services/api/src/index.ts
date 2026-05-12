@@ -3,6 +3,9 @@ import fastifyCors from '@fastify/cors';
 import Redis from 'ioredis';
 import { DEFAULT_REDIS_URL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
 import type { FlightEvent } from '@contrail/shared/types';
+import { createLogger } from '@contrail/logger';
+
+const logger = createLogger('api');
 
 const PORT = Number.parseInt(process.env.PORT ?? '3002');
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
@@ -34,4 +37,4 @@ app.get<{ Params: { icao24: string } }>('/api/flights/:icao24', async (req, repl
 app.get('/health', async () => ({ status: 'ok' }));
 
 await app.listen({ port: PORT, host: '0.0.0.0' });
-console.log(`[api] Listening on :${PORT}`);
+logger.info(`Listening on :${PORT}`);

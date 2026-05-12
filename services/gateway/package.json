@@ -7,6 +7,7 @@
     "clean": "rm -rf ./dist"
   },
   "dependencies": {
+    "@contrail/logger": "workspace:*",
     "@contrail/shared": "workspace:*",
     "@fastify/websocket": "^11.2.0",
     "fastify": "catalog:",
@@ -14,6 +15,7 @@
   },
   "devDependencies": {
     "@types/bun": "catalog:",
+    "pino-pretty": "catalog:",
     "typescript": "catalog:"
   }
 }

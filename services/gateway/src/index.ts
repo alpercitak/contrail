@@ -1,8 +1,11 @@
 import Fastify from 'fastify';
 import fastifyWebsocket, { type WebSocket } from '@fastify/websocket';
 import Redis from 'ioredis';
+import { createLogger } from '@contrail/logger';
 import { DEFAULT_REDIS_URL, REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
 import type { FlightEvent, GatewayMessage, BoundingBox } from '@contrail/shared/types';
+
+const logger = createLogger('gateway');
 
 const PORT = Number.parseInt(process.env.PORT ?? '3001');
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
@@ -25,7 +28,7 @@ const broadcastSnapshot = async () => {
       client.send(payload);
     }
   }
-  console.log(`[gateway] Snapshot broadcast — ${flights.length} aircraft`);
+  logger.info(`Snapshot broadcast: ${flights.length} aircraft`);
 };
 
 const broadcast = (flight: FlightEvent) => {
@@ -43,10 +46,10 @@ const broadcast = (flight: FlightEvent) => {
 
 sub.subscribe(REDIS_CHANNEL, (err) => {
   if (err) {
-    console.error('[gateway] Redis subscribe error', err);
+    logger.error(`[gateway] Redis subscribe error: ${err}`);
     process.exit(1);
   }
-  console.log(`[gateway] Subscribed to ${REDIS_CHANNEL}`);
+  logger.info(`Subscribed to ${REDIS_CHANNEL}`);
 });
 
 sub.on('message', (_channel, message) => {
@@ -60,7 +63,7 @@ sub.on('message', (_channel, message) => {
 
     broadcast(msg as FlightEvent);
   } catch (err) {
-    console.error('[gateway] Failed to parse event', err);
+    logger.error(`Failed to parse event: ${err}`);
   }
 });
 
@@ -69,7 +72,7 @@ await app.register(fastifyWebsocket);
 
 app.get('/ws', { websocket: true }, async (socket) => {
   clients.add(socket);
-  console.log(`[gateway] Client connected — total: ${clients.size}`);
+  logger.info(`Client connected | total: ${clients.size}`);
 
   const raw = await store.hgetall(REDIS_FLIGHTS_KEY);
   const flights: FlightEvent[] = Object.values(raw).map((v) => JSON.parse(v));
@@ -87,17 +90,17 @@ app.get('/ws', { websocket: true }, async (socket) => {
   socket.on('close', () => {
     clients.delete(socket);
     clientViewports.delete(socket);
-    console.log(`[gateway] Client disconnected — total: ${clients.size}`);
+    logger.info(`Client disconnected | total: ${clients.size}`);
   });
 
   socket.on('error', (err: Error) => {
     clients.delete(socket);
     clientViewports.delete(socket);
-    console.error('[gateway] Socket error', err);
+    logger.error(`Socket error: ${err}`);
   });
 });
 
 app.get('/health', async () => ({ status: 'ok', clients: clients.size }));
 
 await app.listen({ port: PORT, host: '0.0.0.0' });
-console.log(`[gateway] Listening on :${PORT}`);
+logger.info(`Listening on :${PORT}`);

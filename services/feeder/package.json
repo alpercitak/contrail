@@ -7,12 +7,14 @@
     "clean": "rm -rf ./dist"
   },
   "dependencies": {
-    "@contrail/shared": "workspace:*",
     "@contrail/feed-mock": "workspace:*",
+    "@contrail/logger": "workspace:*",
+    "@contrail/shared": "workspace:*",
     "ioredis": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
+    "pino-pretty": "catalog:",
     "typescript": "catalog:"
   }
 }
