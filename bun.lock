@@ -13,8 +13,8 @@
       "name": "@contrail/web",
       "version": "0.1.0",
       "dependencies": {
+        "@contrail/feed-mock": "workspace:",
         "@contrail/shared": "workspace:",
-        "@contrail/simulation": "workspace:",
         "leaflet": "^1.9.4",
       },
       "devDependencies": {
@@ -23,16 +23,16 @@
         "vite": "^8.0.10",
       },
     },
-    "packages/shared": {
-      "name": "@contrail/shared",
-      "version": "0.1.0",
-    },
-    "packages/simulation": {
-      "name": "@contrail/simulation",
+    "packages/feed-mock": {
+      "name": "@contrail/feed-mock",
       "version": "0.1.0",
       "dependencies": {
         "@contrail/shared": "workspace:",
       },
+    },
+    "packages/shared": {
+      "name": "@contrail/shared",
+      "version": "0.1.0",
     },
     "services/api": {
       "name": "@contrail/api",
@@ -66,8 +66,8 @@
       "name": "@contrail/simulator",
       "version": "0.1.0",
       "dependencies": {
+        "@contrail/feed-mock": "workspace:*",
         "@contrail/shared": "workspace:*",
-        "@contrail/simulation": "workspace:*",
         "ioredis": "catalog:",
       },
       "devDependencies": {
@@ -86,11 +86,11 @@
   "packages": {
     "@contrail/api": ["@contrail/api@workspace:services/api"],
 
+    "@contrail/feed-mock": ["@contrail/feed-mock@workspace:packages/feed-mock"],
+
     "@contrail/gateway": ["@contrail/gateway@workspace:services/gateway"],
 
     "@contrail/shared": ["@contrail/shared@workspace:packages/shared"],
-
-    "@contrail/simulation": ["@contrail/simulation@workspace:packages/simulation"],
 
     "@contrail/simulator": ["@contrail/simulator@workspace:services/simulator"],
 

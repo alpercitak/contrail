@@ -230,8 +230,8 @@ const init = async () => {
 };
 
 const startDemo = async () => {
-  const { SimulationEngine } = await import('@contrail/simulation');
-  const engine = new SimulationEngine({ fleetSize: DEFAULT_FLEET_SIZE, tickMs: DEFAULT_TICK_MS });
+  const { FeedMock } = await import('@contrail/feed-mock');
+  const engine = new FeedMock({ fleetSize: DEFAULT_FLEET_SIZE, tickMs: DEFAULT_TICK_MS });
 
   for (const flight of engine.snapshot()) upsertMarker(flight);
 

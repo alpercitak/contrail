@@ -7,7 +7,7 @@ import {
   REDIS_FLIGHTS_KEY,
 } from '@contrail/shared/constants';
 import type { FlightEvent } from '@contrail/shared/types';
-import { SimulationEngine } from '@contrail/simulation';
+import { FeedMock } from '@contrail/feed-mock';
 
 const FLEET_SIZE = process.env.FLEET_SIZE ? Number.parseInt(process.env.FLEET_SIZE) : DEFAULT_FLEET_SIZE;
 const TICK_MS = process.env.TICK_MS ? Number.parseInt(process.env.TICK_MS) : DEFAULT_TICK_MS;
@@ -39,7 +39,7 @@ const main = async () => {
 
   await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
 
-  const engine = new SimulationEngine({ fleetSize: FLEET_SIZE, tickMs: TICK_MS });
+  const engine = new FeedMock({ fleetSize: FLEET_SIZE, tickMs: TICK_MS });
 
   console.log(`[simulator] Fleet of ${FLEET_SIZE} aircraft spawned`);
 

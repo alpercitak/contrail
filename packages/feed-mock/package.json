@@ -1,5 +1,5 @@
 {
-  "name": "@contrail/simulation",
+  "name": "@contrail/feed-mock",
   "version": "0.1.0",
   "files": [
     "dist"

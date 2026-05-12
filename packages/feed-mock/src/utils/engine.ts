@@ -1,12 +1,12 @@
 import type { FlightEvent } from '@contrail/shared/types';
-import type { SimulationEngineConfig } from '../types';
+import type { FeedMockConfig } from '../types';
 import { spawnFleet, tickAircraft, toFlightEvent } from './fleet';
 
-export class SimulationEngine {
+export class FeedMock {
   private fleet: Map<string, FlightEvent>;
-  private config: SimulationEngineConfig;
+  private config: FeedMockConfig;
 
-  constructor(config: SimulationEngineConfig) {
+  constructor(config: FeedMockConfig) {
     this.config = config;
     this.fleet = spawnFleet(config.fleetSize);
   }

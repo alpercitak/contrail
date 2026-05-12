@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@contrail/shared": "workspace:*",
-    "@contrail/simulation": "workspace:*",
+    "@contrail/feed-mock": "workspace:*",
     "ioredis": "catalog:"
   },
   "devDependencies": {

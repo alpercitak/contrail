@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@contrail/shared": "workspace:",
-    "@contrail/simulation": "workspace:",
+    "@contrail/feed-mock": "workspace:",
     "leaflet": "^1.9.4"
   },
   "devDependencies": {
