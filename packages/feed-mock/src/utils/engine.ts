@@ -1,8 +1,8 @@
-import type { FlightEvent } from '@contrail/shared/types';
+import type { Feed, FlightEvent } from '@contrail/shared/types';
 import type { FeedMockConfig } from '../types';
 import { spawnFleet, tickAircraft, toFlightEvent } from './fleet';
 
-export class FeedMock {
+export class FeedMock implements Feed {
   private fleet: Map<string, FlightEvent>;
   private config: FeedMockConfig;
 
@@ -27,5 +27,9 @@ export class FeedMock {
   // Current snapshot
   snapshot(): Array<FlightEvent> {
     return Array.from(this.fleet.values()).map(toFlightEvent);
+  }
+
+  async fetch(): Promise<Array<FlightEvent>> {
+    return this.tick();
   }
 }

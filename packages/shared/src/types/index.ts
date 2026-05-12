@@ -1,4 +1,6 @@
-import { DEFAULT_BOUNDING_BOX } from '../constants';
+export interface Feed {
+  fetch(): Promise<Array<FlightEvent>>;
+}
 
 export interface FlightEvent {
   icao24: string; // unique aircraft identifier
