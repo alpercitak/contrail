@@ -4,7 +4,7 @@ import type { MarkerEntry } from '../types';
 import { map } from './map';
 import { addTrailPoint, removeTrail } from './trail';
 import { startInterpolation, removeInterpolation } from './interpolation';
-import { updatePanel, showPanel } from './panel';
+import { updatePanel, showPanel, hidePanel } from './panel';
 import { updateAircraftCount } from './hud';
 
 export const markers = new Map<string, MarkerEntry>();
@@ -116,4 +116,5 @@ export const deselectMarker = () => {
     markers.get(selectedIcao)!.el.classList.remove('selected');
   }
   selectedIcao = null;
+  hidePanel();
 };

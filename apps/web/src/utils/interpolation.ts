@@ -13,7 +13,7 @@ const lerpHeading = (a: number, b: number, t: number) => {
   return (a + diff * t + 360) % 360;
 };
 
-const startInterpolation = (flight: FlightEvent, existing: MarkerEntry) => {
+export const startInterpolation = (flight: FlightEvent, existing: MarkerEntry) => {
   const prev = interpolationStates.get(flight.icao24);
   if (prev) {
     cancelAnimationFrame(prev.rafId);
@@ -53,12 +53,10 @@ const startInterpolation = (flight: FlightEvent, existing: MarkerEntry) => {
   interpolationStates.set(flight.icao24, state);
 };
 
-const removeInterpolation = (icao24: string) => {
+export const removeInterpolation = (icao24: string) => {
   const interpolation = interpolationStates.get(icao24);
   if (interpolation) {
     cancelAnimationFrame(interpolation.rafId);
   }
   interpolationStates.delete(icao24);
 };
-
-export { startInterpolation, removeInterpolation };

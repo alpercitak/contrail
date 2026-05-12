@@ -3,7 +3,7 @@ import 'leaflet/dist/leaflet.css';
 
 const TILE_LAYER_URL = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
 
-const map = L.map('map', { zoomControl: false }).setView([52, 10], 4);
+export const map = L.map('map', { zoomControl: false }).setView([52, 10], 4);
 
 L.tileLayer(TILE_LAYER_URL, {
   attribution: '',
@@ -11,5 +11,3 @@ L.tileLayer(TILE_LAYER_URL, {
 }).addTo(map);
 
 L.control.zoom({ position: 'bottomleft' }).addTo(map);
-
-export { map };

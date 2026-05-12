@@ -6,7 +6,7 @@ const TRAIL_LENGTH = 10;
 const trails = new Map<string, L.Polyline>();
 const trailPositions = new Map<string, [number, number][]>();
 
-const addTrailPoint = (icao24: string, lat: number, lon: number) => {
+export const addTrailPoint = (icao24: string, lat: number, lon: number) => {
   const positions = trailPositions.get(icao24) ?? [];
   positions.push([lat, lon]);
   if (positions.length > TRAIL_LENGTH) {
@@ -27,10 +27,8 @@ const addTrailPoint = (icao24: string, lat: number, lon: number) => {
   }
 };
 
-const removeTrail = (icao24: string) => {
+export const removeTrail = (icao24: string) => {
   trails.get(icao24)?.remove();
   trails.delete(icao24);
   trailPositions.delete(icao24);
 };
-
-export { addTrailPoint, removeTrail };
