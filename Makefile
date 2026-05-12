@@ -9,8 +9,8 @@ redis-down:
 dev: redis-up
 	bun run dev
 
-docker-up:
+up:
 	docker compose up --build --remove-orphans
 
-docker-down:
+down:
 	docker compose down
