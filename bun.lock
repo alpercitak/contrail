@@ -29,6 +29,9 @@
       "dependencies": {
         "@contrail/shared": "workspace:",
       },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+      },
     },
     "packages/logger": {
       "name": "@contrail/logger",
