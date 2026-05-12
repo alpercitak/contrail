@@ -48,13 +48,12 @@
         "typescript": "catalog:",
       },
     },
-    "services/gateway": {
-      "name": "@contrail/gateway",
+    "services/feeder": {
+      "name": "@contrail/feeder",
       "version": "0.1.0",
       "dependencies": {
+        "@contrail/feed-mock": "workspace:*",
         "@contrail/shared": "workspace:*",
-        "@fastify/websocket": "^11.2.0",
-        "fastify": "catalog:",
         "ioredis": "catalog:",
       },
       "devDependencies": {
@@ -62,12 +61,13 @@
         "typescript": "catalog:",
       },
     },
-    "services/simulator": {
-      "name": "@contrail/simulator",
+    "services/gateway": {
+      "name": "@contrail/gateway",
       "version": "0.1.0",
       "dependencies": {
-        "@contrail/feed-mock": "workspace:*",
         "@contrail/shared": "workspace:*",
+        "@fastify/websocket": "^11.2.0",
+        "fastify": "catalog:",
         "ioredis": "catalog:",
       },
       "devDependencies": {
@@ -88,11 +88,11 @@
 
     "@contrail/feed-mock": ["@contrail/feed-mock@workspace:packages/feed-mock"],
 
+    "@contrail/feeder": ["@contrail/feeder@workspace:services/feeder"],
+
     "@contrail/gateway": ["@contrail/gateway@workspace:services/gateway"],
 
     "@contrail/shared": ["@contrail/shared@workspace:packages/shared"],
-
-    "@contrail/simulator": ["@contrail/simulator@workspace:services/simulator"],
 
     "@contrail/web": ["@contrail/web@workspace:apps/web"],
 

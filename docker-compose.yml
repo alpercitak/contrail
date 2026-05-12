@@ -35,10 +35,10 @@ services:
       redis:
         condition: service_healthy
 
-  simulator:
+  feeder:
     build:
       context: .
-      dockerfile: services/simulator/Dockerfile
+      dockerfile: services/feeder/Dockerfile
     environment:
       REDIS_URL: redis://redis:6379
       FLEET_SIZE: "150"

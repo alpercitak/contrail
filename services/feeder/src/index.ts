@@ -31,17 +31,17 @@ const cleanStaleFlights = async (redis: Redis) => {
 const main = async () => {
   const redis = new Redis(REDIS_URL);
 
-  redis.on('connect', () => console.log('[simulator] Redis connected'));
-  redis.on('error', (err) => console.error('[simulator] Redis error', err));
+  redis.on('connect', () => console.log('[feeder] Redis connected'));
+  redis.on('error', (err) => console.error('[feeder] Redis error', err));
 
   await redis.del(REDIS_FLIGHTS_KEY);
-  console.log('[simulator] Cleared previous fleet');
+  console.log('[feeder] Cleared previous fleet');
 
   await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
 
   const engine = new FeedMock({ fleetSize: FLEET_SIZE, tickMs: TICK_MS });
 
-  console.log(`[simulator] Fleet of ${FLEET_SIZE} aircraft spawned`);
+  console.log(`[feeder] Fleet of ${FLEET_SIZE} aircraft spawned`);
 
   const tick = async () => {
     const events = engine.tick();
@@ -55,7 +55,7 @@ const main = async () => {
 
     await pipeline.exec();
     await cleanStaleFlights(redis);
-    console.log(`[simulator] tick — ${events.length} aircraft`);
+    console.log(`[feeder] tick — ${events.length} aircraft`);
   };
 
   await tick();
@@ -63,6 +63,6 @@ const main = async () => {
 };
 
 main().catch((err) => {
-  console.error('[simulator] fatal', err);
+  console.error('[feeder] fatal', err);
   process.exit(1);
 });

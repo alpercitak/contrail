@@ -1,5 +1,5 @@
 {
-  "name": "@contrail/simulator",
+  "name": "@contrail/feeder",
   "version": "0.1.0",
   "scripts": {
     "dev": "bun --watch src",
