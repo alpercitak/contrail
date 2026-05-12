@@ -1,0 +1,61 @@
+{
+  "uid": "contrail",
+  "title": "Contrail",
+  "schemaVersion": 39,
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "datasource": "Loki",
+        "query": "label_values(service)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Log Rate (All)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate({service=~\"$service\"}[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Rate",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate({service=~\"$service\"} |= \"error\" [5m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Info Logs (approx)",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate({service=~\"$service\"}[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Logs - $service",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "{service=~\"$service\"}"
+        }
+      ]
+    }
+  ]
+}
