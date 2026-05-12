@@ -2,15 +2,9 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { DEFAULT_FLEET_SIZE, DEFAULT_TICK_MS } from '@contrail/shared/constants';
 import type { FlightEvent, GatewayMessage } from '@contrail/shared/types';
+import type { MarkerEntry, Status } from './types';
 import { DOM } from './utils/dom';
-
-type Status = 'online' | 'connecting' | 'error';
-
-type MarkerEntry = {
-  marker: L.Marker;
-  el: HTMLDivElement;
-  flight: FlightEvent;
-};
+import { removeInterpolation, startInterpolation } from './utils/interpolation';
 
 const IS_DEMO = __RUNTIME_MODE__ === 'demo';
 const DEFAULT_WS_RETRY_DELAY = 1000;
@@ -46,6 +40,7 @@ const updateMarker = (flight: FlightEvent, markerEntry: MarkerEntry) => {
     wrapper.style.transform = `rotate(${flight.heading}deg)`;
     wrapper.innerHTML = getAircraftSVG(altitudeColor(flight.altitude));
   }
+  startInterpolation(flight, markerEntry);
   markerEntry.flight = flight;
   if (selectedIcao === flight.icao24) {
     updatePanel(flight);
@@ -103,6 +98,7 @@ const upsertMarker = (flight: FlightEvent) => {
 };
 
 const removeMarker = (icao24: string) => {
+  removeInterpolation(icao24);
   markers.get(icao24)?.marker.remove();
   trails.get(icao24)?.remove();
   markers.delete(icao24);
