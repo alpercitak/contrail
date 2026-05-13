@@ -1,34 +1,12 @@
-import type { FlightEvent, GatewayMessage } from '@contrail/shared';
-import { incrementUpdates, resetUpdates, setStatus } from './hud';
+import type { FlightEvent } from '@contrail/shared/types';
+import type { BoundingBox } from '@contrail/shared/types';
 import { map } from './map';
-import { removeStaleMarkers, upsertMarker } from './marker';
+import { upsertMarker, removeStaleMarkers } from './marker';
+import { resetUpdates, incrementUpdates, setStatus } from './hud';
 
-const DEFAULT_WS_RETRY_DELAY = 1000;
-const BATCH_DELAY_MS = 200;
 const CHUNK_SIZE = 50;
 
-let ws: WebSocket | null = null;
-let wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
-let pendingUpdates: Array<FlightEvent> = [];
-let rafScheduled = false;
-
-export const sendViewport = () => {
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    return;
-  }
-  const bounds = map.getBounds();
-  ws.send(
-    JSON.stringify({
-      type: 'viewport',
-      bbox: {
-        latMin: bounds.getSouth(),
-        latMax: bounds.getNorth(),
-        lonMin: bounds.getWest(),
-        lonMax: bounds.getEast(),
-      },
-    }),
-  );
-};
+const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
 
 const processChunk = (flights: Array<FlightEvent>, index = 0) => {
   const end = Math.min(index + CHUNK_SIZE, flights.length);
@@ -38,47 +16,36 @@ const processChunk = (flights: Array<FlightEvent>, index = 0) => {
   }
 };
 
-export const connectWS = () => {
-  setStatus('connecting');
-  ws = new WebSocket('/ws');
+worker.onmessage = (e) => {
+  const msg = e.data;
 
-  ws.addEventListener('open', () => {
-    setStatus('online');
-    wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
-    sendViewport();
-  });
+  if (msg.type === 'snapshot') {
+    removeStaleMarkers(new Set((msg.flights as FlightEvent[]).map((f) => f.icao24)));
+    processChunk(msg.flights);
+    resetUpdates();
+  }
 
-  ws.addEventListener('message', (e) => {
-    const msg = JSON.parse(e.data) as GatewayMessage;
+  if (msg.type === 'batch') {
+    processChunk(msg.flights);
+    incrementUpdates(msg.count);
+  }
 
-    if (msg.type === 'snapshot') {
-      removeStaleMarkers(new Set(msg.flights.map((f) => f.icao24)));
-      processChunk(msg.flights);
-      resetUpdates();
-      return;
-    }
+  if (msg.type === 'status') {
+    setStatus(msg.value);
+  }
+};
 
-    if (msg.type === 'update') {
-      pendingUpdates.push(msg.flight);
-      if (rafScheduled) {
-        return;
-      }
-      rafScheduled = true;
-      setTimeout(() => {
-        const flights = [...pendingUpdates];
-        pendingUpdates.length = 0;
-        rafScheduled = false;
-        processChunk(flights);
-        incrementUpdates(flights.length);
-      }, BATCH_DELAY_MS);
-    }
-  });
+export const sendViewport = () => {
+  const b = map.getBounds();
+  const bbox: BoundingBox = {
+    latMin: b.getSouth(),
+    latMax: b.getNorth(),
+    lonMin: b.getWest(),
+    lonMax: b.getEast(),
+  };
+  worker.postMessage({ type: 'viewport', bbox });
+};
 
-  ws.addEventListener('close', () => {
-    setStatus('error');
-    setTimeout(connectWS, wsRetryDelay);
-    wsRetryDelay = Math.min(wsRetryDelay * 2, 30000);
-  });
-
-  ws.addEventListener('error', () => setStatus('error'));
+export const connectWS = (url: string) => {
+  worker.postMessage({ type: 'connect', url });
 };

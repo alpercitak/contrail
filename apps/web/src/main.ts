@@ -21,7 +21,7 @@ const init = async () => {
   for (const flight of flights) {
     upsertMarker(flight);
   }
-  connectWS();
+  connectWS('/ws');
   updateAircraftCount(flights.length);
 };
 
