@@ -57,7 +57,7 @@ sub.on('message', (_channel, message) => {
     const msg = JSON.parse(message);
 
     if (msg.type === 'reset') {
-      broadcastSnapshot();
+      broadcastSnapshot().catch((err) => logger.error(`broadcastSnapshot error: ${err}`));
       return;
     }
 
@@ -103,4 +103,18 @@ app.get('/ws', { websocket: true }, async (socket) => {
 app.get('/health', async () => ({ status: 'ok', clients: clients.size }));
 
 await app.listen({ port: PORT, host: '0.0.0.0' });
+
+const shutdown = async (signal: string) => {
+  logger.info(`${signal} received, shutting down`);
+  for (const client of clients) client.close();
+  await app.close();
+  await store.quit();
+  await sub.quit();
+  logger.info('shutdown complete');
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
 logger.info(`Listening on :${PORT}`);

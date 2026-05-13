@@ -37,4 +37,16 @@ app.get<{ Params: { icao24: string } }>('/api/flights/:icao24', async (req, repl
 app.get('/health', async () => ({ status: 'ok' }));
 
 await app.listen({ port: PORT, host: '0.0.0.0' });
+
+const shutdown = async (signal: string) => {
+  logger.info(`${signal} received, shutting down`);
+  await app.close();
+  await redis.quit();
+  logger.info('shutdown complete');
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
 logger.info(`Listening on :${PORT}`);

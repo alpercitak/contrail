@@ -50,14 +50,20 @@ const createFeed = async (): Promise<Feed> => {
 
 const main = async () => {
   const redis = new Redis(REDIS_URL);
+  let tickInterval: NodeJS.Timeout;
 
   redis.on('connect', () => logger.info('Redis connected'));
   redis.on('error', (err) => logger.error(`Redis error: ${err}`));
 
   const feed = await createFeed();
-  if (!feed) {
-    logger.error('Feed not found');
-  }
+
+  const shutdown = async (signal: string) => {
+    logger.info(`${signal} received, shutting down`);
+    clearInterval(tickInterval);
+    await redis.quit();
+    logger.info('shutdown complete');
+    process.exit(0);
+  };
 
   const tick = async () => {
     const events = await feed.fetch();
@@ -78,7 +84,10 @@ const main = async () => {
   logger.info('Cleared previous fleet');
   await tick();
   await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
-  setInterval(tick, TICK_MS);
+  tickInterval = setInterval(tick, TICK_MS);
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 };
 
 main().catch((err) => {
