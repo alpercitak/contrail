@@ -95,7 +95,9 @@ export const upsertMarker = (flight: FlightEvent) => {
 
 export const removeStaleMarkers = (activeIcaos: Set<string>) => {
   for (const [icao24] of markers) {
-    if (!activeIcaos.has(icao24)) removeMarker(icao24);
+    if (!activeIcaos.has(icao24)) {
+      removeMarker(icao24);
+    }
   }
 };
 
