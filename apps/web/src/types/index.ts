@@ -4,6 +4,8 @@ import type { FlightEvent } from '@contrail/shared';
 export type MarkerEntry = {
   marker: L.Marker;
   el: HTMLDivElement;
+  wrapper: HTMLElement;
+  svg: SVGElement;
   flight: FlightEvent;
 };
 

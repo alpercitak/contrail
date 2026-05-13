@@ -1,5 +1,4 @@
-import type { FlightEvent } from '@contrail/shared/types';
-import type { BoundingBox } from '@contrail/shared/types';
+import type { FlightEvent, BoundingBox } from '@contrail/shared/types';
 import { map } from './map';
 import { upsertMarker, removeStaleMarkers } from './marker';
 import { resetUpdates, incrementUpdates, setStatus } from './hud';
@@ -17,21 +16,23 @@ const processChunk = (flights: Array<FlightEvent>, index = 0) => {
 };
 
 worker.onmessage = (e) => {
-  const msg = e.data;
+  const { type } = e.data;
 
-  if (msg.type === 'snapshot') {
-    removeStaleMarkers(new Set((msg.flights as FlightEvent[]).map((f) => f.icao24)));
-    processChunk(msg.flights);
+  if (type === 'snapshot') {
+    removeStaleMarkers(new Set((e.data.flights as FlightEvent[]).map((f) => f.icao24)));
+    processChunk(e.data.flights);
     resetUpdates();
+    return;
   }
 
-  if (msg.type === 'batch') {
-    processChunk(msg.flights);
-    incrementUpdates(msg.count);
+  if (type === 'batch') {
+    processChunk(e.data.flights);
+    incrementUpdates(e.data.count);
+    return;
   }
 
-  if (msg.type === 'status') {
-    setStatus(msg.value);
+  if (type === 'status') {
+    setStatus(e.data.value);
   }
 };
 

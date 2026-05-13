@@ -9,6 +9,7 @@ import { updateAircraftCount } from './hud';
 
 export const markers = new Map<string, MarkerEntry>();
 let selectedIcao: string | null = null;
+let countRafId: number | null = null;
 
 const getAltitudeColor = (altitude: number): string => {
   if (altitude < 3000) return '#f59e0b';
@@ -16,44 +17,59 @@ const getAltitudeColor = (altitude: number): string => {
   return '#00d4ff';
 };
 
-const getAircraftSVG = (color: string) => `
+const getAircraftSVG = (color: string): string => `
   <div class="aircraft-icon-wrapper">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}">
       <path d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/>
     </svg>
   </div>`;
 
+const scheduleCountUpdate = () => {
+  if (countRafId) {
+    return;
+  }
+  countRafId = requestAnimationFrame(() => {
+    updateAircraftCount(markers.size);
+    countRafId = null;
+  });
+};
+
 export const removeMarker = (icao24: string) => {
   removeInterpolation(icao24);
   markers.get(icao24)?.marker.remove();
   removeTrail(icao24);
   markers.delete(icao24);
-  updateAircraftCount(markers.size);
+  scheduleCountUpdate();
 };
 
-const updateMarker = (flight: FlightEvent, markerEntry: MarkerEntry) => {
-  markerEntry.marker.setLatLng([flight.lat, flight.lon]);
-  const wrapper = markerEntry.el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
-  if (wrapper) {
-    wrapper.style.transform = `rotate(${flight.heading}deg)`;
-    wrapper.innerHTML = getAircraftSVG(getAltitudeColor(flight.altitude));
+const updateMarker = (flight: FlightEvent, entry: MarkerEntry) => {
+  const newColor = getAltitudeColor(flight.altitude);
+  if (entry.svg.getAttribute('fill') !== newColor) {
+    entry.svg.setAttribute('fill', newColor);
   }
-  startInterpolation(flight, markerEntry);
-  markerEntry.flight = flight;
+
+  startInterpolation(flight, entry);
+  addTrailPoint(flight.icao24, flight.lat, flight.lon);
+  entry.flight = flight;
+
   if (selectedIcao === flight.icao24) {
     updatePanel(flight);
   }
-
-  addTrailPoint(flight.icao24, flight.lat, flight.lon);
 };
 
 const createMarker = (flight: FlightEvent) => {
   const el = document.createElement('div');
   el.className = 'aircraft-marker';
-  el.innerHTML = getAircraftSVG(getAltitudeColor(flight.altitude));
+
+  const color = getAltitudeColor(flight.altitude);
+  el.innerHTML = getAircraftSVG(color);
 
   const wrapper = el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
+  const svg = wrapper.querySelector('svg') as SVGElement;
+
   wrapper.style.transform = `rotate(${flight.heading}deg)`;
+  wrapper.dataset.heading = String(flight.heading);
+  svg.setAttribute('fill', color);
 
   el.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -63,17 +79,12 @@ const createMarker = (flight: FlightEvent) => {
   const icon = L.divIcon({ html: el, className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
   const marker = L.marker([flight.lat, flight.lon], { icon }).addTo(map);
 
-  markers.set(flight.icao24, { marker, el, flight });
+  markers.set(flight.icao24, { marker, el, wrapper, svg, flight });
+  scheduleCountUpdate();
 };
 
 export const upsertMarker = (flight: FlightEvent) => {
-  const inView = map.getBounds().contains([flight.lat, flight.lon]);
   const existing = markers.get(flight.icao24);
-
-  if (!inView && existing) {
-    removeMarker(flight.icao24);
-    return;
-  }
 
   if (existing) {
     updateMarker(flight, existing);
