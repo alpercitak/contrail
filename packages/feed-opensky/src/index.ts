@@ -62,6 +62,9 @@ const mapState = (state: OpenSkyResponse['states'][number]): FlightEvent | null 
 const getAuthorizationHeader = (config: FeedOpenskyConfig): string =>
   `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64')}`;
 
+const isValidFlight = (flight: FlightEvent): boolean =>
+  !!flight.callsign?.trim() && flight.speed > 50 && flight.heading !== 0;
+
 export class FeedOpenSky implements Feed {
   private cache: Array<FlightEvent> = [];
   private config: FeedOpenskyConfig;
@@ -83,15 +86,12 @@ export class FeedOpenSky implements Feed {
 
     const data = (await res.json()) as OpenSkyResponse;
     const events = (data.states ?? [])
-      .map((s) => mapState(s))
-      .filter((e): e is FlightEvent => e !== null) as Array<FlightEvent>;
+      .map(mapState)
+      .filter((e): e is FlightEvent => e !== null)
+      .filter(isValidFlight);
 
     this.cache = events;
 
     return events;
-  }
-
-  snapshot(): Array<FlightEvent> {
-    return this.cache;
   }
 }

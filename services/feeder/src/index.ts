@@ -54,18 +54,9 @@ const main = async () => {
   redis.on('connect', () => logger.info('Redis connected'));
   redis.on('error', (err) => logger.error(`Redis error: ${err}`));
 
-  await redis.del(REDIS_FLIGHTS_KEY);
-  logger.info('Cleared previous fleet');
-
-  await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
-
   const feed = await createFeed();
   if (!feed) {
     logger.error('Feed not found');
-  }
-
-  for (const flight of feed.snapshot()) {
-    await redis.hset(REDIS_FLIGHTS_KEY, flight.icao24, JSON.stringify(flight));
   }
 
   const tick = async () => {
@@ -83,7 +74,10 @@ const main = async () => {
     logger.info(`Tick: ${events.length} aircraft`);
   };
 
+  await redis.del(REDIS_FLIGHTS_KEY);
+  logger.info('Cleared previous fleet');
   await tick();
+  await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
   setInterval(tick, TICK_MS);
 };
 

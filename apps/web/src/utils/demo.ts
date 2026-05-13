@@ -15,7 +15,7 @@ export const startDemo = async () => {
     const events = await feedMock.fetch();
     for (const flight of events) {
       upsertMarker(flight);
-      incrementUpdates();
+      incrementUpdates(events.length);
     }
   }, DEFAULT_TICK_MS);
 
