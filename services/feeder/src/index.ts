@@ -1,5 +1,4 @@
 import Redis from 'ioredis';
-import { FeedMock } from '@contrail/feed-mock';
 import { createLogger } from '@contrail/logger';
 import {
   DEFAULT_FLEET_SIZE,
@@ -8,7 +7,7 @@ import {
   REDIS_CHANNEL,
   REDIS_FLIGHTS_KEY,
 } from '@contrail/shared/constants';
-import type { FlightEvent } from '@contrail/shared/types';
+import type { Feed, FlightEvent } from '@contrail/shared/types';
 
 const logger = createLogger('feeder');
 
@@ -31,6 +30,24 @@ const cleanStaleFlights = async (redis: Redis) => {
   await pipeline.exec();
 };
 
+const createFeed = async (): Promise<Feed> => {
+  if (process.env.OPENSKY_CLIENT_ID) {
+    const { FeedOpenSky } = await import('@contrail/feed-opensky');
+    return new FeedOpenSky({
+      clientId: process.env.OPENSKY_CLIENT_ID!,
+      clientSecret: process.env.OPENSKY_CLIENT_SECRET!,
+      tickMs: DEFAULT_TICK_MS,
+    });
+  }
+
+  const { FeedMock } = await import('@contrail/feed-mock');
+
+  return new FeedMock({
+    fleetSize: FLEET_SIZE,
+    tickMs: TICK_MS,
+  });
+};
+
 const main = async () => {
   const redis = new Redis(REDIS_URL);
 
@@ -42,16 +59,17 @@ const main = async () => {
 
   await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
 
-  const feedMock = new FeedMock({ fleetSize: FLEET_SIZE, tickMs: TICK_MS });
+  const feed = await createFeed();
+  if (!feed) {
+    logger.error('Feed not found');
+  }
 
-  for (const flight of feedMock.snapshot()) {
+  for (const flight of feed.snapshot()) {
     await redis.hset(REDIS_FLIGHTS_KEY, flight.icao24, JSON.stringify(flight));
   }
 
-  logger.info(`Fleet of ${FLEET_SIZE} aircraft spawned`);
-
   const tick = async () => {
-    const events = await feedMock.fetch();
+    const events = await feed.fetch();
     const pipeline = redis.pipeline();
 
     for (const flight of events) {

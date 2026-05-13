@@ -1,5 +1,6 @@
 export interface Feed {
   fetch(): Promise<Array<FlightEvent>>;
+  snapshot(): Array<FlightEvent>;
 }
 
 export interface FlightEvent {

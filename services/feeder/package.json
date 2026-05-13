@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@contrail/feed-mock": "workspace:*",
+    "@contrail/feed-opensky": "workspace:*",
     "@contrail/logger": "workspace:*",
     "@contrail/shared": "workspace:*",
     "ioredis": "catalog:"

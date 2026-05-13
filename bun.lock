@@ -33,6 +33,16 @@
         "@types/bun": "catalog:",
       },
     },
+    "packages/feed-opensky": {
+      "name": "@contrail/feed-opensky",
+      "version": "0.1.0",
+      "dependencies": {
+        "@contrail/shared": "workspace:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+      },
+    },
     "packages/logger": {
       "name": "@contrail/logger",
       "version": "0.1.0",
@@ -64,6 +74,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@contrail/feed-mock": "workspace:*",
+        "@contrail/feed-opensky": "workspace:*",
         "@contrail/logger": "workspace:*",
         "@contrail/shared": "workspace:*",
         "ioredis": "catalog:",
@@ -100,6 +111,8 @@
     "@contrail/api": ["@contrail/api@workspace:services/api"],
 
     "@contrail/feed-mock": ["@contrail/feed-mock@workspace:packages/feed-mock"],
+
+    "@contrail/feed-opensky": ["@contrail/feed-opensky@workspace:packages/feed-opensky"],
 
     "@contrail/feeder": ["@contrail/feeder@workspace:services/feeder"],
 
