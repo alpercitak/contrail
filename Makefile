@@ -11,6 +11,9 @@ dev: redis-up
 
 dev-observe: observe-up dev
 
+build:
+	bun run build
+	
 up:
 	docker compose up --build --remove-orphans
 

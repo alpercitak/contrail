@@ -2,8 +2,8 @@
   "name": "@contrail/feeder",
   "version": "0.1.0",
   "scripts": {
-    "dev": "bun --watch src",
-    "build": "NODE_ENV=production bun build src/index.ts --outdir dist --target bun",
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
     "clean": "rm -rf ./dist"
   },
   "dependencies": {
@@ -14,7 +14,6 @@
   },
   "devDependencies": {
     "@types/bun": "catalog:",
-    "pino-pretty": "catalog:",
     "typescript": "catalog:"
   }
 }
