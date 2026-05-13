@@ -1,12 +1,16 @@
-import type { GatewayMessage } from '@contrail/shared';
+import type { FlightEvent, GatewayMessage } from '@contrail/shared';
 import { incrementUpdates, resetUpdates, setStatus } from './hud';
 import { map } from './map';
 import { removeStaleMarkers, upsertMarker } from './marker';
 
 const DEFAULT_WS_RETRY_DELAY = 1000;
+const BATCH_DELAY_MS = 200;
+const CHUNK_SIZE = 50;
 
 let ws: WebSocket | null = null;
 let wsRetryDelay = DEFAULT_WS_RETRY_DELAY;
+let pendingUpdates: Array<FlightEvent> = [];
+let rafScheduled = false;
 
 export const sendViewport = () => {
   if (!ws || ws.readyState !== WebSocket.OPEN) {
@@ -26,6 +30,14 @@ export const sendViewport = () => {
   );
 };
 
+const processChunk = (flights: Array<FlightEvent>, index = 0) => {
+  const end = Math.min(index + CHUNK_SIZE, flights.length);
+  for (let i = index; i < end; i++) upsertMarker(flights[i]);
+  if (end < flights.length) {
+    requestAnimationFrame(() => processChunk(flights, end));
+  }
+};
+
 export const connectWS = () => {
   setStatus('connecting');
   ws = new WebSocket('/ws');
@@ -41,13 +53,24 @@ export const connectWS = () => {
 
     if (msg.type === 'snapshot') {
       removeStaleMarkers(new Set(msg.flights.map((f) => f.icao24)));
-      for (const flight of msg.flights) {
-        upsertMarker(flight);
-      }
+      processChunk(msg.flights);
       resetUpdates();
-    } else if (msg.type === 'update') {
-      upsertMarker(msg.flight);
-      incrementUpdates();
+      return;
+    }
+
+    if (msg.type === 'update') {
+      pendingUpdates.push(msg.flight);
+      if (rafScheduled) {
+        return;
+      }
+      rafScheduled = true;
+      setTimeout(() => {
+        const flights = [...pendingUpdates];
+        pendingUpdates.length = 0;
+        rafScheduled = false;
+        processChunk(flights);
+        incrementUpdates(flights.length);
+      }, BATCH_DELAY_MS);
     }
   });
 

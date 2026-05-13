@@ -12,8 +12,8 @@ const animateCount = (el: HTMLElement, target: number) => {
   setTimeout(() => animateCount(el, target), 300);
 };
 
-export const incrementUpdates = () => {
-  updateCount++;
+export const incrementUpdates = (count: number) => {
+  updateCount += count;
   DOM.updates.textContent = String(updateCount);
 };
 
