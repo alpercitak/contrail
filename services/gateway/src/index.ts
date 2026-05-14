@@ -46,6 +46,18 @@ const getSnapshot = async (): Promise<Array<FlightEvent>> => {
   return cachedSnapshot;
 };
 
+const inViewport = (flight: FlightEvent, bbox: BoundingBox): boolean =>
+  flight.lat >= bbox.latMin && flight.lat <= bbox.latMax && flight.lon >= bbox.lonMin && flight.lon <= bbox.lonMax;
+
+const sendSnapshot = async (client: WebSocket, bbox: BoundingBox) => {
+  const snapshot = await getSnapshot();
+  const flights = snapshot.filter((flight) => inViewport(flight, bbox));
+  if (client.readyState !== 1) {
+    return;
+  }
+  client.send(JSON.stringify({ type: 'snapshot', flights } satisfies GatewayMessage));
+};
+
 const getCellId = (lat: number, lon: number) => `${Math.floor(lon / GRID_SIZE)}:${Math.floor(lat / GRID_SIZE)}`;
 
 const getCellsForBBox = (bbox: BoundingBox) => {
@@ -66,6 +78,7 @@ const getCellsForBBox = (bbox: BoundingBox) => {
 };
 
 const registerClient = (client: WebSocket, bbox: BoundingBox) => {
+  removeClient(client);
   const cells = getCellsForBBox(bbox);
 
   const set = new Set<string>();
@@ -168,14 +181,14 @@ await app.register(fastifyWebsocket);
 app.get('/ws', { websocket: true }, async (socket) => {
   logger.info(`Client connected`);
 
-  const flights = await getSnapshot();
-  socket.send(JSON.stringify({ type: 'snapshot', flights } satisfies GatewayMessage));
-
   socket.on('message', (raw: Buffer | string) => {
     try {
       const msg = JSON.parse(raw.toString()) as GatewayMessage;
       if (msg.type === 'viewport') {
         registerClient(socket, msg.bbox);
+        sendSnapshot(socket, msg.bbox).catch((err) => {
+          logger.error(`Failed to send viewport snapshot: ${err}`);
+        });
       }
     } catch {}
   });
