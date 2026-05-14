@@ -11,15 +11,19 @@ const PORT = Number.parseInt(process.env.PORT ?? '3001');
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 const SNAPSHOT_TTL = 1000;
 const MAX_BUFFERED_AMOUNT = 1_000_000;
+const BATCH_INTERVAL_MS = 100;
+const MAX_BATCH_SIZE = 200;
 
 const store = new Redis(REDIS_URL);
 const sub = new Redis(REDIS_URL);
 
 const clients = new Set<WebSocket>();
 const clientViewports = new Map<WebSocket, BoundingBox>();
+const pendingUpdates: Array<FlightEvent> = [];
 
 let cachedSnapshot: Array<FlightEvent> = [];
 let lastSnapshot = 0;
+let batchTimer: NodeJS.Timeout;
 
 const safeParse = (v: string): FlightEvent | null => {
   try {
@@ -59,16 +63,23 @@ const broadcastSnapshot = async () => {
   logger.info(`Snapshot broadcast: ${flights.length} aircraft`);
 };
 
-const broadcast = (flight: FlightEvent) => {
-  const payload = JSON.stringify({ type: 'update', flight } satisfies GatewayMessage);
+const flushBatch = () => {
+  if (pendingUpdates.length === 0) {
+    return;
+  }
+
+  const batch = pendingUpdates.splice(0, MAX_BATCH_SIZE);
+
+  const payload = JSON.stringify({
+    type: 'batch',
+    flights: batch,
+  } satisfies GatewayMessage);
+
   for (const client of clients) {
     if (client.readyState !== 1) {
       continue;
     }
-    const bbox = clientViewports.get(client);
-    if (bbox && !isInViewport(flight, bbox)) {
-      continue;
-    }
+
     if (client.bufferedAmount > MAX_BUFFERED_AMOUNT) {
       logger.warn({ bufferedAmount: client.bufferedAmount }, 'Dropping slow client (backpressure exceeded)');
       clients.delete(client);
@@ -76,8 +87,26 @@ const broadcast = (flight: FlightEvent) => {
       client.terminate();
       continue;
     }
+
+    const bbox = clientViewports.get(client);
+
+    if (bbox) {
+      let hasMatch = false;
+      for (const flight of batch) {
+        if (isInViewport(flight, bbox)) {
+          hasMatch = true;
+          break;
+        }
+      }
+      if (!hasMatch) {
+        continue;
+      }
+    }
+
     client.send(payload);
   }
+
+  logger.info(`Batch flushed: ${batch.length} updates`);
 };
 
 sub.subscribe(REDIS_CHANNEL, (err) => {
@@ -91,13 +120,11 @@ sub.subscribe(REDIS_CHANNEL, (err) => {
 sub.on('message', (_channel, message) => {
   try {
     const msg = JSON.parse(message);
-
     if (msg.type === 'reset') {
       broadcastSnapshot().catch((err) => logger.error(`broadcastSnapshot error: ${err}`));
       return;
     }
-
-    broadcast(msg as FlightEvent);
+    pendingUpdates.push(msg as FlightEvent);
   } catch (err) {
     logger.error(`Failed to parse event: ${err}`);
   }
@@ -139,9 +166,14 @@ app.get('/health', async () => ({ status: 'ok', clients: clients.size }));
 
 await app.listen({ port: PORT, host: '0.0.0.0' });
 
+batchTimer = setInterval(flushBatch, BATCH_INTERVAL_MS);
+
 const shutdown = async (signal: string) => {
   logger.info(`${signal} received, shutting down`);
-  for (const client of clients) client.close();
+  clearInterval(batchTimer);
+  for (const client of clients) {
+    client.close();
+  }
   await app.close();
   await store.quit();
   await sub.quit();

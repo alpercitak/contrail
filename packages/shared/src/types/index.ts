@@ -35,4 +35,9 @@ export interface ViewportMessage {
   bbox: BoundingBox;
 }
 
-export type GatewayMessage = SnapshotMessage | UpdateMessage | ViewportMessage;
+export interface BatchMessage {
+  type: 'batch';
+  flights: Array<FlightEvent>;
+}
+
+export type GatewayMessage = SnapshotMessage | UpdateMessage | ViewportMessage | BatchMessage;

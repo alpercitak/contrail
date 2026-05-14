@@ -57,6 +57,14 @@ const flush = () => {
   } satisfies WorkerMessage);
 };
 
+const ingest = (flight: FlightEvent) => {
+  pendingUpdates.push(flight);
+  if (!flushScheduled) {
+    flushScheduled = true;
+    setTimeout(flush, 200);
+  }
+};
+
 const connect = (url: string) => {
   wsUrl = url;
   self.postMessage({ type: 'status', value: 'connecting' } satisfies WorkerMessage);
@@ -84,10 +92,12 @@ const connect = (url: string) => {
     }
 
     if (msg.type === 'update') {
-      pendingUpdates.push(msg.flight);
-      if (!flushScheduled) {
-        flushScheduled = true;
-        setTimeout(flush, 200);
+      ingest(msg.flight);
+    }
+
+    if (msg.type === 'batch') {
+      for (const flight of msg.flights) {
+        ingest(flight);
       }
     }
   });
