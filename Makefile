@@ -19,3 +19,6 @@ up:
 
 down:
 	docker compose down
+
+load-test:
+	RUN_GATEWAY=true RUN_API=true k6 run observability/tests/load/index.js
