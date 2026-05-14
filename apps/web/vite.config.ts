@@ -1,6 +1,11 @@
 import { defineConfig } from 'vite';
+import webfontDownload from 'vite-plugin-webfont-dl';
+
+const FONT_URL =
+  'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500&display=swap';
 
 export default defineConfig({
+  plugins: [webfontDownload([FONT_URL], { assetsSubfolder: 'fonts', subsetsAllowed: ['latin'] })],
   server: {
     proxy: {
       '/api': {
