@@ -1,4 +1,5 @@
-import type { FlightEvent, BoundingBox } from '@contrail/shared/types';
+import type { BoundingBox } from '@contrail/shared/types';
+import type { ShapedFlight } from './worker';
 import { map } from './map';
 import { upsertFlight, removeStaleFlights } from './marker';
 import { addTrailPoint } from './trail';
@@ -10,10 +11,10 @@ worker.onmessage = (e) => {
   const { type } = e.data;
 
   if (type === 'snapshot') {
-    const flights = e.data.flights as Array<FlightEvent>;
-    removeStaleFlights(new Set(flights.map((f) => f.icao24)));
-    for (const flight of flights) {
-      upsertFlight(flight);
+    const flights = e.data.flights as Array<ShapedFlight>;
+    removeStaleFlights(new Set(flights.map(({ flight }) => flight.icao24)));
+    for (const { flight, feature } of flights) {
+      upsertFlight(flight, feature);
       addTrailPoint(flight.icao24, flight.lon, flight.lat);
     }
     resetUpdates();
@@ -21,9 +22,9 @@ worker.onmessage = (e) => {
   }
 
   if (type === 'batch') {
-    const flights = e.data.flights as FlightEvent[];
-    for (const flight of flights) {
-      upsertFlight(flight);
+    const flights = e.data.flights as ShapedFlight[];
+    for (const { flight, feature } of flights) {
+      upsertFlight(flight, feature);
       addTrailPoint(flight.icao24, flight.lon, flight.lat);
     }
     incrementUpdates(e.data.count);

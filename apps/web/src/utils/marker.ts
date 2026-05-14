@@ -1,4 +1,5 @@
 import type { FlightEvent } from '@contrail/shared/types';
+import { toAircraftFeature, type AircraftFeature } from './aircraft-feature';
 import { fetchAndDrawHistory } from './history';
 import { updateAircraftCount } from './hud';
 import { map, setAircraftData, setSelectedFilter, clearSelectedFilter, setHistoryTrailData } from './map';
@@ -6,26 +7,18 @@ import { updatePanel, showPanel, hidePanel } from './panel';
 import { scheduleMapDataRender } from './render-scheduler';
 
 export const flights = new Map<string, FlightEvent>();
+const aircraftFeatures = new Map<string, AircraftFeature>();
 let selectedIcao: string | null = null;
 
 const renderAircraft = () => {
-  const features: Array<GeoJSON.Feature> = Array.from(flights.values()).map((f) => ({
-    type: 'Feature',
-    geometry: { type: 'Point', coordinates: [f.lon, f.lat] },
-    properties: {
-      icao24: f.icao24,
-      callsign: f.callsign,
-      altitude: f.altitude,
-      speed: f.speed,
-      heading: f.heading,
-    },
-  }));
+  const features = Array.from(aircraftFeatures.values());
   setAircraftData(features);
   updateAircraftCount(features.length);
 };
 
-export const upsertFlight = (flight: FlightEvent) => {
+export const upsertFlight = (flight: FlightEvent, feature = toAircraftFeature(flight)) => {
   flights.set(flight.icao24, flight);
+  aircraftFeatures.set(flight.icao24, feature);
   if (selectedIcao === flight.icao24) {
     updatePanel(flight);
   }
@@ -34,6 +27,7 @@ export const upsertFlight = (flight: FlightEvent) => {
 
 export const removeFlight = (icao24: string) => {
   flights.delete(icao24);
+  aircraftFeatures.delete(icao24);
   scheduleMapDataRender(renderAircraft);
 };
 
@@ -41,6 +35,7 @@ export const removeStaleFlights = (activeIcaos: Set<string>) => {
   for (const icao24 of flights.keys()) {
     if (!activeIcaos.has(icao24)) {
       flights.delete(icao24);
+      aircraftFeatures.delete(icao24);
     }
   }
   scheduleMapDataRender(renderAircraft);
@@ -52,6 +47,7 @@ export const cullOutOfViewport = () => {
   for (const [icao24, flight] of flights) {
     if (!bounds.contains([flight.lon, flight.lat])) {
       flights.delete(icao24);
+      aircraftFeatures.delete(icao24);
       changed = true;
     }
   }

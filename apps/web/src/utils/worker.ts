@@ -1,10 +1,12 @@
 import type { FlightEvent, GatewayMessage, BoundingBox } from '@contrail/shared/types';
+import { toAircraftFeature, type AircraftFeature } from './aircraft-feature';
 
 type MainMessage = { type: 'connect'; url: string } | { type: 'viewport'; bbox: BoundingBox };
+export type ShapedFlight = { flight: FlightEvent; feature: AircraftFeature };
 
 type WorkerMessage =
-  | { type: 'snapshot'; flights: Array<FlightEvent> }
-  | { type: 'batch'; flights: Array<FlightEvent>; count: number }
+  | { type: 'snapshot'; flights: Array<ShapedFlight> }
+  | { type: 'batch'; flights: Array<ShapedFlight>; count: number }
   | { type: 'status'; value: 'online' | 'connecting' | 'error' };
 
 const MIN_DISTANCE = 0.01;
@@ -25,6 +27,11 @@ const hasChanged = (prev: FlightEvent, next: FlightEvent): boolean => {
   const lonDiff = Math.abs(prev.lon - next.lon);
   return latDiff > MIN_DISTANCE || lonDiff > MIN_DISTANCE;
 };
+
+const toShapedFlight = (flight: FlightEvent): ShapedFlight => ({
+  flight,
+  feature: toAircraftFeature(flight),
+});
 
 const flush = () => {
   flushScheduled = false;
@@ -52,7 +59,7 @@ const flush = () => {
 
   self.postMessage({
     type: 'batch',
-    flights: toRender,
+    flights: toRender.map(toShapedFlight),
     count: toRender.length,
   } satisfies WorkerMessage);
 };
@@ -87,7 +94,7 @@ const connect = (url: string) => {
       for (const f of flights) {
         knownState.set(f.icao24, f);
       }
-      self.postMessage({ type: 'snapshot', flights } satisfies WorkerMessage);
+      self.postMessage({ type: 'snapshot', flights: flights.map(toShapedFlight) } satisfies WorkerMessage);
       return;
     }
 
