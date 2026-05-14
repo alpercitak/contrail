@@ -82,8 +82,8 @@ body {
 
 #status {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
   display: grid;
   gap: 8px;
   font-family: 'JetBrains Mono', monospace;
@@ -156,8 +156,8 @@ body {
 
 #panel {
   position: absolute;
-  bottom: 24px;
-  right: 16px;
+  bottom: 44px;
+  right: 12px;
   width: 260px;
   background: var(--surface-bg);
   border: 1px solid var(--border);
