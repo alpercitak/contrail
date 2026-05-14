@@ -12,7 +12,6 @@ export const map = new maplibregl.Map({
   zoom: 4,
   minZoom: 3,
   maxZoom: 14,
-  attributionControl: false,
 });
 
 map.addControl(new maplibregl.NavigationControl(), 'bottom-left');

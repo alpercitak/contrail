@@ -28,12 +28,6 @@ body {
   overflow: hidden;
 }
 
-.maplibregl-ctrl-logo {
-  display: none !important;
-}
-.maplibregl-ctrl-attrib {
-  display: none !important;
-}
 .maplibregl-ctrl-group {
   background: rgba(10, 12, 15, 0.85) !important;
   border: 1px solid var(--border) !important;
