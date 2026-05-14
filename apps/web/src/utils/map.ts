@@ -12,9 +12,11 @@ export const map = new maplibregl.Map({
   zoom: 4,
   minZoom: 3,
   maxZoom: 14,
+  attributionControl: false,
 });
 
 map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
 const AIRCRAFT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <path fill="white" d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/>
