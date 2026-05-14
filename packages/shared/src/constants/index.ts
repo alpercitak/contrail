@@ -9,9 +9,10 @@ export const DEFAULT_BOUNDING_BOX = {
 } as const;
 
 export const REDIS_CHANNEL = 'flight-events';
+export const REDIS_FLIGHT_KEY = 'flight';
+export const REDIS_FLIGHT_CALLSIGNS_KEY = `${REDIS_FLIGHT_KEY}:callsigns`;
+export const REDIS_FLIGHT_ICAO24S_KEY = `${REDIS_FLIGHT_KEY}:icao24s`;
+export const REDIS_FLIGHT_BY_CALLSIGN_KEY = `${REDIS_FLIGHT_KEY}:by:callsign`;
+export const REDIS_FLIGHT_BY_ICAO24_KEY = `${REDIS_FLIGHT_KEY}:by:icao24`;
 export const REDIS_FLIGHTS_KEY = 'flights';
-export const REDIS_FLIGHTS_BY_CALLSIGN_KEY = 'flight:by:callsign';
-export const REDIS_FLIGHTS_BY_ICAO24_KEY = 'flight:by:icao24';
-export const REDIS_FLIGHT_CALLSIGNS_KEY = 'flight:callsigns';
-export const REDIS_FLIGHT_ICAO24S_KEY = 'flight:icao24s';
 export const REDIS_FLIGHTS_LAST_SEEN_KEY = `${REDIS_FLIGHTS_KEY}:last-seen`;

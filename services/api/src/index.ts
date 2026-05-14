@@ -3,10 +3,11 @@ import fastifyCors from '@fastify/cors';
 import Redis from 'ioredis';
 import {
   DEFAULT_REDIS_URL,
+  REDIS_FLIGHT_KEY,
   REDIS_FLIGHT_CALLSIGNS_KEY,
   REDIS_FLIGHT_ICAO24S_KEY,
-  REDIS_FLIGHTS_BY_CALLSIGN_KEY,
-  REDIS_FLIGHTS_BY_ICAO24_KEY,
+  REDIS_FLIGHT_BY_CALLSIGN_KEY,
+  REDIS_FLIGHT_BY_ICAO24_KEY,
   REDIS_FLIGHTS_KEY,
 } from '@contrail/shared/constants';
 import type { FlightEvent } from '@contrail/shared/types';
@@ -36,7 +37,12 @@ const findIndexedFlight = async (icao24: string, query: string): Promise<FlightE
 
   const normalizedCallsign = normalizeSearchValue(flight.callsign);
   const normalizedIcao24 = normalizeSearchValue(flight.icao24);
-  if (normalizedIcao24 === query || normalizedCallsign === query || normalizedIcao24.startsWith(query) || normalizedCallsign.startsWith(query)) {
+  if (
+    normalizedIcao24 === query ||
+    normalizedCallsign === query ||
+    normalizedIcao24.startsWith(query) ||
+    normalizedCallsign.startsWith(query)
+  ) {
     return flight;
   }
 
@@ -94,9 +100,12 @@ app.get<{ Querystring: { q: string } }>('/api/flights/search', async (req, reply
     return reply.status(400).send({ error: 'missing query' });
   }
 
-  const exactIcao24 = await redis.hget(REDIS_FLIGHTS_BY_ICAO24_KEY, q);
-  const exactCallsignIcao24 = await redis.hget(REDIS_FLIGHTS_BY_CALLSIGN_KEY, q);
-  const exactMatch = await firstMatchingFlight([exactIcao24, exactCallsignIcao24].filter((icao24): icao24 is string => !!icao24), q);
+  const exactIcao24 = await redis.hget(REDIS_FLIGHT_BY_ICAO24_KEY, q);
+  const exactCallsignIcao24 = await redis.hget(REDIS_FLIGHT_BY_CALLSIGN_KEY, q);
+  const exactMatch = await firstMatchingFlight(
+    [exactIcao24, exactCallsignIcao24].filter((icao24): icao24 is string => !!icao24),
+    q,
+  );
   if (exactMatch) {
     return reply.send(exactMatch);
   }
@@ -124,7 +133,7 @@ app.get<{ Params: { icao24: string } }>('/api/flights/:icao24', async (req, repl
 });
 
 app.get<{ Params: { icao24: string } }>('/api/flights/:icao24/history', async (req, reply) => {
-  const raw = await redis.lrange(`flight:history:${req.params.icao24}`, 0, -1);
+  const raw = await redis.lrange(`${REDIS_FLIGHT_KEY}:history:${req.params.icao24}`, 0, -1);
   if (!raw.length) {
     return reply.status(404).send({ error: 'not found' });
   }

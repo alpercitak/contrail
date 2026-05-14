@@ -5,10 +5,11 @@ import {
   DEFAULT_REDIS_URL,
   DEFAULT_TICK_MS,
   REDIS_CHANNEL,
+  REDIS_FLIGHT_KEY,
   REDIS_FLIGHT_CALLSIGNS_KEY,
   REDIS_FLIGHT_ICAO24S_KEY,
-  REDIS_FLIGHTS_BY_CALLSIGN_KEY,
-  REDIS_FLIGHTS_BY_ICAO24_KEY,
+  REDIS_FLIGHT_BY_CALLSIGN_KEY,
+  REDIS_FLIGHT_BY_ICAO24_KEY,
   REDIS_FLIGHTS_KEY,
   REDIS_FLIGHTS_LAST_SEEN_KEY,
 } from '@contrail/shared/constants';
@@ -48,9 +49,9 @@ const cleanStaleFlights = async (redis: Redis) => {
 
   const pipeline = redis.pipeline();
   pipeline.hdel(REDIS_FLIGHTS_KEY, ...staleIcao24s);
-  pipeline.hdel(REDIS_FLIGHTS_BY_ICAO24_KEY, ...staleIcao24s.map(normalizeSearchValue));
+  pipeline.hdel(REDIS_FLIGHT_BY_ICAO24_KEY, ...staleIcao24s.map(normalizeSearchValue));
   if (staleFlights.length > 0) {
-    pipeline.hdel(REDIS_FLIGHTS_BY_CALLSIGN_KEY, ...staleFlights.map((flight) => normalizeSearchValue(flight.callsign)));
+    pipeline.hdel(REDIS_FLIGHT_BY_CALLSIGN_KEY, ...staleFlights.map((flight) => normalizeSearchValue(flight.callsign)));
     pipeline.zrem(REDIS_FLIGHT_CALLSIGNS_KEY, ...staleFlights.map(callsignIndexMember));
     pipeline.zrem(REDIS_FLIGHT_ICAO24S_KEY, ...staleFlights.map(icao24IndexMember));
   }
@@ -114,14 +115,14 @@ const main = async () => {
     for (const flight of events) {
       const serialized = JSON.stringify(flight);
       pipeline.hset(REDIS_FLIGHTS_KEY, flight.icao24, serialized);
-      pipeline.hset(REDIS_FLIGHTS_BY_ICAO24_KEY, normalizeSearchValue(flight.icao24), flight.icao24);
-      pipeline.hset(REDIS_FLIGHTS_BY_CALLSIGN_KEY, normalizeSearchValue(flight.callsign), flight.icao24);
+      pipeline.hset(REDIS_FLIGHT_BY_ICAO24_KEY, normalizeSearchValue(flight.icao24), flight.icao24);
+      pipeline.hset(REDIS_FLIGHT_BY_CALLSIGN_KEY, normalizeSearchValue(flight.callsign), flight.icao24);
       pipeline.zadd(REDIS_FLIGHT_ICAO24S_KEY, 0, icao24IndexMember(flight));
       pipeline.zadd(REDIS_FLIGHT_CALLSIGNS_KEY, 0, callsignIndexMember(flight));
       pipeline.zadd(REDIS_FLIGHTS_LAST_SEEN_KEY, flight.timestamp ?? Date.now(), flight.icao24);
       pipeline.publish(REDIS_CHANNEL, serialized);
-      pipeline.lpush(`flight:history:${flight.icao24}`, serialized);
-      pipeline.ltrim(`flight:history:${flight.icao24}`, 0, 49);
+      pipeline.lpush(`${REDIS_FLIGHT_KEY}:history:${flight.icao24}`, serialized);
+      pipeline.ltrim(`${REDIS_FLIGHT_KEY}:history:${flight.icao24}`, 0, 49);
     }
 
     await pipeline.exec();
@@ -132,8 +133,8 @@ const main = async () => {
   await redis.del(
     REDIS_FLIGHTS_KEY,
     REDIS_FLIGHTS_LAST_SEEN_KEY,
-    REDIS_FLIGHTS_BY_CALLSIGN_KEY,
-    REDIS_FLIGHTS_BY_ICAO24_KEY,
+    REDIS_FLIGHT_BY_CALLSIGN_KEY,
+    REDIS_FLIGHT_BY_ICAO24_KEY,
     REDIS_FLIGHT_CALLSIGNS_KEY,
     REDIS_FLIGHT_ICAO24S_KEY,
   );
