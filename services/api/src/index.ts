@@ -10,7 +10,17 @@ const logger = createLogger('api');
 const PORT = Number.parseInt(process.env.PORT ?? '3002');
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 
-const redis = new Redis(REDIS_URL);
+const redis = new Redis(REDIS_URL, {
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    logger.warn({ attempt: times, delayMs: delay }, 'Redis reconnect attempt');
+    return delay;
+  },
+  reconnectOnError: (err) => {
+    logger.error({ err }, 'Redis connection error');
+    return true;
+  },
+});
 
 const app = Fastify({ logger: false });
 
@@ -75,5 +85,12 @@ const shutdown = async (signal: string) => {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
+
+redis.on('connect', () => logger.info('Redis connected'));
+redis.on('ready', () => logger.info('Redis ready'));
+redis.on('error', (err) => logger.error(`Redis error: ${err}`));
+redis.on('reconnecting', (time: number) => logger.warn({ time }, 'Redis reconnecting'));
+redis.on('close', () => logger.warn('Redis connection closed'));
+redis.on('end', () => logger.warn('Redis connection ended (no more reconnects)'));
 
 logger.info(`Listening on :${PORT}`);

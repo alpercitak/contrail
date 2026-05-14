@@ -49,11 +49,25 @@ const createFeed = async (): Promise<Feed> => {
 };
 
 const main = async () => {
-  const redis = new Redis(REDIS_URL);
+  const redis = new Redis(REDIS_URL, {
+    retryStrategy: (times) => {
+      const delay = Math.min(times * 50, 2000);
+      logger.warn({ attempt: times, delayMs: delay }, 'Redis reconnect attempt');
+      return delay;
+    },
+    reconnectOnError: (err) => {
+      logger.error({ err }, 'Redis connection error');
+      return true;
+    },
+  });
   let tickInterval: NodeJS.Timeout;
 
   redis.on('connect', () => logger.info('Redis connected'));
+  redis.on('ready', () => logger.info('Redis ready'));
   redis.on('error', (err) => logger.error(`Redis error: ${err}`));
+  redis.on('reconnecting', (time: number) => logger.warn({ time }, 'Redis reconnecting'));
+  redis.on('close', () => logger.warn('Redis connection closed'));
+  redis.on('end', () => logger.warn('Redis connection ended (no more reconnects)'));
 
   const feed = await createFeed();
 
