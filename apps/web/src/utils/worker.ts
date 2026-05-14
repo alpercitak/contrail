@@ -16,7 +16,7 @@ let ws: WebSocket | null = null;
 let bbox: BoundingBox | null = null;
 let retryDelay = 1000;
 let wsUrl = '';
-let pendingUpdates: FlightEvent[] = [];
+let pendingUpdates = new Map<string, FlightEvent>();
 let flushScheduled = false;
 const knownState = new Map<string, FlightEvent>();
 
@@ -36,11 +36,14 @@ const toShapedFlight = (flight: FlightEvent): ShapedFlight => ({
 
 const flush = () => {
   flushScheduled = false;
-  if (pendingUpdates.length === 0) {
+  if (pendingUpdates.size === 0) {
     return;
   }
 
-  const toRender = pendingUpdates.filter((flight) => {
+  const updates = pendingUpdates;
+  pendingUpdates = new Map();
+
+  const toRender = Array.from(updates.values()).filter((flight) => {
     if (bbox && !inViewport(flight, bbox)) {
       return false;
     }
@@ -51,8 +54,6 @@ const flush = () => {
     knownState.set(flight.icao24, flight);
     return true;
   });
-
-  pendingUpdates = [];
 
   if (toRender.length === 0) {
     return;
@@ -66,7 +67,7 @@ const flush = () => {
 };
 
 const ingest = (flight: FlightEvent) => {
-  pendingUpdates.push(flight);
+  pendingUpdates.set(flight.icao24, flight);
   if (!flushScheduled) {
     flushScheduled = true;
     setTimeout(flush, 200);
