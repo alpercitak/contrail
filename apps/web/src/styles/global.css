@@ -8,16 +8,14 @@
 
 :root {
   --bg: #0a0c0f;
-  --surface: #111418;
   --border: #1e2530;
   --accent: #00d4ff;
-  --accent-dim: rgba(0, 212, 255, 0.15);
   --text: #e2e8f0;
   --text-muted: #64748b;
-  --aircraft: #00d4ff;
-  --aircraft-selected: #f59e0b;
   --danger: #ef4444;
   --online: #22c55e;
+  --surface-bg: rgba(10, 12, 15, 0.85);
+  --surface-blur: blur(8px);
 }
 
 html,
@@ -45,7 +43,6 @@ body {
   font-weight: 700;
   color: var(--accent);
   letter-spacing: 0.08em;
-  color: var(--accent);
 }
 
 #map {
@@ -85,20 +82,16 @@ body {
   z-index: 800;
 }
 
-#status-text {
-  text-transform: uppercase;
-}
-
 .status-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 6px 12px;
-  background: rgba(10, 12, 15, 0.85);
+  background: var(--surface-bg);
   border: 1px solid var(--border);
   border-radius: 4px;
-  backdrop-filter: blur(8px);
+  backdrop-filter: var(--surface-blur);
   text-transform: uppercase;
 }
 
@@ -124,11 +117,11 @@ body {
 }
 
 #search {
-  background: rgba(10, 12, 15, 0.85);
+  background: var(--surface-bg);
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 6px 12px;
-  backdrop-filter: blur(8px);
+  backdrop-filter: var(--surface-blur);
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--text);
@@ -156,10 +149,10 @@ body {
   bottom: 24px;
   right: 16px;
   width: 260px;
-  background: rgba(10, 12, 15, 0.92);
+  background: var(--surface-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
-  backdrop-filter: blur(12px);
+  backdrop-filter: var(--surface-blur);
   z-index: 800;
   overflow: hidden;
   transform: translateY(20px);
@@ -263,10 +256,7 @@ body {
 .aircraft-icon-wrapper {
   width: 100%;
   height: 100%;
-}
-
-.aircraft-marker.selected svg {
-  fill: #f59e0b;
+  will-change: transform;
 }
 
 .aircraft-marker.selected .aircraft-icon-wrapper svg {
