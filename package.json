@@ -1,6 +1,7 @@
 {
   "name": "contrail",
   "version": "0.1.0",
+  "description": "A real-time aircraft radar lab with viewport-aware WebSockets, Redis-backed flight state, and a fast map UI.",
   "private": true,
   "scripts": {
     "dev": "turbo run dev",
