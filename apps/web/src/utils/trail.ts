@@ -3,20 +3,21 @@ import { scheduleMapDataRender } from './render-scheduler';
 
 const TRAIL_LENGTH = 12;
 const trailPositions = new Map<string, [number, number][]>();
+const trailFeatureBuffer: Array<GeoJSON.Feature> = [];
 
 const renderTrails = () => {
-  const features: Array<GeoJSON.Feature> = [];
+  trailFeatureBuffer.length = 0;
   for (const [icao24, positions] of trailPositions) {
     if (positions.length < 2) {
       continue;
     }
-    features.push({
+    trailFeatureBuffer.push({
       type: 'Feature',
       geometry: { type: 'LineString', coordinates: positions },
       properties: { icao24 },
     });
   }
-  setTrailData(features);
+  setTrailData(trailFeatureBuffer);
 };
 
 export const addTrailPoint = (icao24: string, lon: number, lat: number) => {

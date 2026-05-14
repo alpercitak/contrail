@@ -9,12 +9,14 @@ import { removeTrail } from './trail';
 
 export const flights = new Map<string, FlightEvent>();
 const aircraftFeatures = new Map<string, AircraftFeature>();
+const aircraftFeatureBuffer: AircraftFeature[] = [];
 let selectedIcao: string | null = null;
 
 const renderAircraft = () => {
-  const features = Array.from(aircraftFeatures.values());
-  setAircraftData(features);
-  updateAircraftCount(features.length);
+  aircraftFeatureBuffer.length = 0;
+  aircraftFeatureBuffer.push(...aircraftFeatures.values());
+  setAircraftData(aircraftFeatureBuffer);
+  updateAircraftCount(aircraftFeatureBuffer.length);
 };
 
 export const upsertFlight = (flight: FlightEvent, feature = toAircraftFeature(flight)) => {

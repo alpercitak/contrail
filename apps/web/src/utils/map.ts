@@ -1,6 +1,10 @@
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+const aircraftCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+const trailCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+const historyTrailCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+
 export const map = new maplibregl.Map({
   container: 'map',
   style: 'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json',
@@ -33,17 +37,17 @@ map.on('load', async () => {
 
   map.addSource('aircraft', {
     type: 'geojson',
-    data: { type: 'FeatureCollection', features: [] },
+    data: aircraftCollection,
   });
 
   map.addSource('trails', {
     type: 'geojson',
-    data: { type: 'FeatureCollection', features: [] },
+    data: trailCollection,
   });
 
   map.addSource('history-trails', {
     type: 'geojson',
-    data: { type: 'FeatureCollection', features: [] },
+    data: historyTrailCollection,
   });
 
   map.addLayer({
@@ -112,17 +116,20 @@ map.on('load', async () => {
 
 export const setAircraftData = (features: Array<GeoJSON.Feature>) => {
   const source = map.getSource('aircraft') as maplibregl.GeoJSONSource;
-  source?.setData({ type: 'FeatureCollection', features });
+  aircraftCollection.features = features;
+  source?.setData(aircraftCollection);
 };
 
 export const setTrailData = (features: Array<GeoJSON.Feature>) => {
   const source = map.getSource('trails') as maplibregl.GeoJSONSource;
-  source?.setData({ type: 'FeatureCollection', features });
+  trailCollection.features = features;
+  source?.setData(trailCollection);
 };
 
 export const setHistoryTrailData = (features: Array<GeoJSON.Feature>) => {
   const source = map.getSource('history-trails') as maplibregl.GeoJSONSource;
-  source?.setData({ type: 'FeatureCollection', features });
+  historyTrailCollection.features = features;
+  source?.setData(historyTrailCollection);
 };
 
 export const setSelectedFilter = (icao24: string) => {
