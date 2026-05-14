@@ -5,6 +5,7 @@ import { updateAircraftCount } from './hud';
 import { map, setAircraftData, setSelectedFilter, clearSelectedFilter, setHistoryTrailData } from './map';
 import { updatePanel, showPanel, hidePanel } from './panel';
 import { scheduleMapDataRender } from './render-scheduler';
+import { removeTrail } from './trail';
 
 export const flights = new Map<string, FlightEvent>();
 const aircraftFeatures = new Map<string, AircraftFeature>();
@@ -28,6 +29,7 @@ export const upsertFlight = (flight: FlightEvent, feature = toAircraftFeature(fl
 export const removeFlight = (icao24: string) => {
   flights.delete(icao24);
   aircraftFeatures.delete(icao24);
+  removeTrail(icao24);
   scheduleMapDataRender(renderAircraft);
 };
 
@@ -36,6 +38,7 @@ export const removeStaleFlights = (activeIcaos: Set<string>) => {
     if (!activeIcaos.has(icao24)) {
       flights.delete(icao24);
       aircraftFeatures.delete(icao24);
+      removeTrail(icao24);
     }
   }
   scheduleMapDataRender(renderAircraft);
@@ -48,6 +51,7 @@ export const cullOutOfViewport = () => {
     if (!bounds.contains([flight.lon, flight.lat])) {
       flights.delete(icao24);
       aircraftFeatures.delete(icao24);
+      removeTrail(icao24);
       changed = true;
     }
   }
