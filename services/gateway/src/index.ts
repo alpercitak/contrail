@@ -25,6 +25,7 @@ const clientViewports = new Map<WebSocket, BoundingBox>();
 const pendingUpdates = new Map<string, FlightEvent>();
 
 let cachedSnapshot: Array<FlightEvent> = [];
+let cachedSnapshotCells = new Map<string, Array<FlightEvent>>();
 let lastSnapshot = 0;
 let batchTimer: NodeJS.Timeout;
 
@@ -34,35 +35,6 @@ const safeParse = (v: string): FlightEvent | null => {
   } catch {
     return null;
   }
-};
-
-const getSnapshot = async (): Promise<Array<FlightEvent>> => {
-  const now = Date.now();
-  if (now - lastSnapshot < SNAPSHOT_TTL) {
-    return cachedSnapshot;
-  }
-  const raw = await store.hgetall(REDIS_FLIGHTS_KEY);
-  cachedSnapshot = Object.values(raw).map(safeParse).filter(Boolean) as Array<FlightEvent>;
-  lastSnapshot = now;
-  return cachedSnapshot;
-};
-
-const inViewport = (flight: FlightEvent, bbox: BoundingBox): boolean =>
-  flight.lat >= bbox.latMin && flight.lat <= bbox.latMax && flight.lon >= bbox.lonMin && flight.lon <= bbox.lonMax;
-
-const sameBBox = (a: BoundingBox | undefined, b: BoundingBox): boolean =>
-  a?.latMin === b.latMin && a.latMax === b.latMax && a.lonMin === b.lonMin && a.lonMax === b.lonMax;
-
-const sendSnapshot = async (client: WebSocket, bbox: BoundingBox) => {
-  const snapshot = await getSnapshot();
-  if (!sameBBox(clientViewports.get(client), bbox)) {
-    return;
-  }
-  const flights = snapshot.filter((flight) => inViewport(flight, bbox));
-  if (client.readyState !== 1) {
-    return;
-  }
-  client.send(JSON.stringify(encodeGatewayMessage({ type: 'snapshot', flights } satisfies GatewayMessage)));
 };
 
 const getCellId = (lat: number, lon: number) => `${Math.floor(lon / GRID_SIZE)}:${Math.floor(lat / GRID_SIZE)}`;
@@ -82,6 +54,54 @@ const getCellsForBBox = (bbox: BoundingBox) => {
   }
 
   return cells;
+};
+
+const buildSnapshotCells = (flights: Array<FlightEvent>) => {
+  const cells = new Map<string, Array<FlightEvent>>();
+
+  for (const flight of flights) {
+    const cell = getCellId(flight.lat, flight.lon);
+    const bucket = cells.get(cell);
+    if (bucket) {
+      bucket.push(flight);
+    } else {
+      cells.set(cell, [flight]);
+    }
+  }
+
+  return cells;
+};
+
+const getSnapshotCells = async (): Promise<Map<string, Array<FlightEvent>>> => {
+  const now = Date.now();
+  if (now - lastSnapshot < SNAPSHOT_TTL) {
+    return cachedSnapshotCells;
+  }
+  const raw = await store.hgetall(REDIS_FLIGHTS_KEY);
+  cachedSnapshot = Object.values(raw).map(safeParse).filter(Boolean) as Array<FlightEvent>;
+  cachedSnapshotCells = buildSnapshotCells(cachedSnapshot);
+  lastSnapshot = now;
+  return cachedSnapshotCells;
+};
+
+const inViewport = (flight: FlightEvent, bbox: BoundingBox): boolean =>
+  flight.lat >= bbox.latMin && flight.lat <= bbox.latMax && flight.lon >= bbox.lonMin && flight.lon <= bbox.lonMax;
+
+const sameBBox = (a: BoundingBox | undefined, b: BoundingBox): boolean =>
+  a?.latMin === b.latMin && a.latMax === b.latMax && a.lonMin === b.lonMin && a.lonMax === b.lonMax;
+
+const sendSnapshot = async (client: WebSocket, bbox: BoundingBox) => {
+  const snapshotCells = await getSnapshotCells();
+  if (!sameBBox(clientViewports.get(client), bbox)) {
+    return;
+  }
+  const flights = getCellsForBBox(bbox)
+    .flatMap((cell) => snapshotCells.get(cell) ?? [])
+    .filter((flight) => inViewport(flight, bbox));
+  if (client.readyState !== 1) {
+    return;
+  }
+  client.send(JSON.stringify(encodeGatewayMessage({ type: 'snapshot', flights } satisfies GatewayMessage)));
 };
 
 const registerClient = (client: WebSocket, bbox: BoundingBox) => {
