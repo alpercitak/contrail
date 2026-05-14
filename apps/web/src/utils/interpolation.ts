@@ -1,6 +1,6 @@
-import { DEFAULT_TICK_MS } from '@contrail/shared/constants';
 import type { FlightEvent } from '@contrail/shared/types';
-import type { InterpolationState, MarkerEntry } from '../types';
+import { flights, upsertFlight } from './marker';
+import type { InterpolationState } from '../types';
 
 const interpolationStates = new Map<string, InterpolationState>();
 
@@ -13,35 +13,39 @@ const lerpHeading = (a: number, b: number, t: number) => {
   return (a + diff * t + 360) % 360;
 };
 
-export const startInterpolation = (flight: FlightEvent, existing: MarkerEntry) => {
+export const startInterpolation = (flight: FlightEvent, tickMs: number) => {
   const prev = interpolationStates.get(flight.icao24);
   if (prev) {
     cancelAnimationFrame(prev.rafId);
   }
 
-  const { lat: fromLat, lng: fromLon } = existing.marker.getLatLng();
-  const wrapper = existing.el.querySelector('.aircraft-icon-wrapper') as HTMLElement;
-  const fromHeading = parseFloat(wrapper?.dataset.heading ?? String(flight.heading));
+  const current = flights.get(flight.icao24);
+  if (!current) {
+    upsertFlight(flight);
+    return;
+  }
 
   const state: InterpolationState = {
-    fromLat,
-    fromLon,
-    fromHeading,
+    fromLat: current.lat,
+    fromLon: current.lon,
+    fromHeading: current.heading,
     toLat: flight.lat,
     toLon: flight.lon,
     toHeading: flight.heading,
     startTime: performance.now(),
+    tickMs,
     rafId: 0,
+    flight,
   };
 
   const frame = (now: number) => {
-    const t = Math.min((now - state.startTime) / DEFAULT_TICK_MS, 1);
-    existing.marker.setLatLng([lerp(state.fromLat, state.toLat, t), lerp(state.fromLon, state.toLon, t)]);
-    if (wrapper) {
-      const heading = lerpHeading(state.fromHeading, state.toHeading, t);
-      wrapper.style.transform = `rotate(${heading}deg)`;
-      wrapper.dataset.heading = String(heading);
-    }
+    const t = Math.min((now - state.startTime) / state.tickMs, 1);
+    upsertFlight({
+      ...state.flight,
+      lat: lerp(state.fromLat, state.toLat, t),
+      lon: lerp(state.fromLon, state.toLon, t),
+      heading: lerpHeading(state.fromHeading, state.toHeading, t),
+    });
     if (t < 1) {
       state.rafId = requestAnimationFrame(frame);
     } else {

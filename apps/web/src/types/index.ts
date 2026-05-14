@@ -20,4 +20,6 @@ export type InterpolationState = {
   toHeading: number;
   startTime: number;
   rafId: number;
+  tickMs: number;
+  flight: FlightEvent;
 };

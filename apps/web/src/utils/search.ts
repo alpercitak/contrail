@@ -1,6 +1,6 @@
 import type { FlightEvent } from '@contrail/shared/types';
 import { map } from './map';
-import { markers, selectAircraft } from './marker';
+import { flights, selectAircraft } from './marker';
 
 export const searchFlight = async (query: string): Promise<boolean> => {
   const res = await fetch(`/api/flights/search?q=${encodeURIComponent(query)}`);
@@ -10,9 +10,13 @@ export const searchFlight = async (query: string): Promise<boolean> => {
 
   const flight: FlightEvent = await res.json();
 
-  map.setView([flight.lat, flight.lon], 8, { animate: true });
+  map.flyTo({
+    center: [flight.lon, flight.lat],
+    zoom: 8,
+    duration: 1500,
+  });
 
-  if (markers.has(flight.icao24)) {
+  if (flights.has(flight.icao24)) {
     selectAircraft(flight.icao24);
   }
 

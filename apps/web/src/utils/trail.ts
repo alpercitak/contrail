@@ -1,34 +1,42 @@
-import L from 'leaflet';
-import { map } from './map';
+import { setTrailData } from './map';
 
-const TRAIL_LENGTH = 10;
-
-const trails = new Map<string, L.Polyline>();
+const TRAIL_LENGTH = 12;
 const trailPositions = new Map<string, [number, number][]>();
+let renderScheduled = false;
 
-export const addTrailPoint = (icao24: string, lat: number, lon: number) => {
+const scheduleRender = () => {
+  if (renderScheduled) {
+    return;
+  }
+  renderScheduled = true;
+  requestAnimationFrame(() => {
+    const features: Array<GeoJSON.Feature> = [];
+    for (const [icao24, positions] of trailPositions) {
+      if (positions.length < 2) {
+        continue;
+      }
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: positions },
+        properties: { icao24 },
+      });
+    }
+    setTrailData(features);
+    renderScheduled = false;
+  });
+};
+
+export const addTrailPoint = (icao24: string, lon: number, lat: number) => {
   const positions = trailPositions.get(icao24) ?? [];
-  positions.push([lat, lon]);
+  positions.push([lon, lat]);
   if (positions.length > TRAIL_LENGTH) {
     positions.shift();
   }
   trailPositions.set(icao24, positions);
-
-  const existing = trails.get(icao24);
-  if (existing) {
-    existing.setLatLngs(positions);
-  } else {
-    const line = L.polyline(positions, {
-      color: '#00d4ff',
-      weight: 1,
-      opacity: 0.4,
-    }).addTo(map);
-    trails.set(icao24, line);
-  }
+  scheduleRender();
 };
 
 export const removeTrail = (icao24: string) => {
-  trails.get(icao24)?.remove();
-  trails.delete(icao24);
   trailPositions.delete(icao24);
+  scheduleRender();
 };
