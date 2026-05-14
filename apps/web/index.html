@@ -16,7 +16,7 @@
     <div class="hud-logo">contrail</div>
   </div>
   <div id="status">
-     <div class="status-item">
+    <div class="status-item">
       <span>Aircrafts</span>
       <div class="text--primary" id="status-aircrafts">0</div>
     </div>
@@ -28,33 +28,36 @@
       <span id="status-text">connecting</span>
       <div class="status-dot" id="dot"></div>
     </div>
+    <div id="search-wrapper" class="status-item">
+      <input id="search" type="text" placeholder="Search" autocomplete="off" />
+    </div>
   </div>
   <div id="panel">
-  <div class="panel-header">
-    <div>
-      <div class="text--primary" id="p-callsign">—</div>
-      <div class="panel-icao" id="p-icao">—</div>
+    <div class="panel-header">
+      <div>
+        <div class="text--primary" id="p-callsign">—</div>
+        <div class="panel-icao" id="p-icao">—</div>
+      </div>
+      <button class="panel-close" id="panel-close">✕</button>
     </div>
-    <button class="panel-close" id="panel-close">✕</button>
-  </div>
-  <div class="panel-body">
-    <div class="panel-field">
-      <div class="field-label">Altitude</div>
-      <div class="field-value" id="p-alt">—</div>
+    <div class="panel-body">
+      <div class="panel-field">
+        <div class="field-label">Altitude</div>
+        <div class="field-value" id="p-alt">—</div>
+      </div>
+      <div class="panel-field">
+        <div class="field-label">Speed</div>
+        <div class="field-value" id="p-spd">—</div>
+      </div>
+      <div class="panel-field">
+        <div class="field-label">Heading</div>
+        <div class="field-value" id="p-hdg">—</div>
+      </div>
+      <div class="panel-field">
+        <div class="field-label">Position</div>
+        <div class="field-value" id="p-pos">—</div>
+      </div>
     </div>
-    <div class="panel-field">
-      <div class="field-label">Speed</div>
-      <div class="field-value" id="p-spd">—</div>
-    </div>
-    <div class="panel-field">
-      <div class="field-label">Heading</div>
-      <div class="field-value" id="p-hdg">—</div>
-    </div>
-    <div class="panel-field">
-      <div class="field-label">Position</div>
-      <div class="field-value" id="p-pos">—</div>
-    </div>
-  </div>
   </div>
 </body>
 </html>

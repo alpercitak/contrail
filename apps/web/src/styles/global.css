@@ -73,14 +73,6 @@ body {
   text-transform: uppercase;
 }
 
-.stat {
-  background: rgba(10, 12, 15, 0.85);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 6px 12px;
-  backdrop-filter: blur(8px);
-}
-
 #status {
   position: absolute;
   top: 16px;
@@ -122,8 +114,41 @@ body {
   background: var(--online);
   box-shadow: 0 0 6px var(--online);
 }
+
 .status-dot.error {
   background: var(--danger);
+}
+
+#search-wrapper {
+  pointer-events: all;
+}
+
+#search {
+  background: rgba(10, 12, 15, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  backdrop-filter: blur(8px);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+  outline: none;
+  width: 180px;
+  transition: border-color 0.2s;
+}
+
+#search::placeholder {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#search:focus {
+  border-color: var(--accent);
+}
+
+#search.error {
+  border-color: var(--danger);
 }
 
 #panel {
@@ -230,6 +255,7 @@ body {
 .aircraft-marker:hover {
   filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.9));
 }
+
 .aircraft-marker.selected {
   filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.9));
 }

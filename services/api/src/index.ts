@@ -34,6 +34,24 @@ app.get<{ Params: { icao24: string } }>('/api/flights/:icao24', async (req, repl
   return reply.send(JSON.parse(raw) as FlightEvent);
 });
 
+// GET /api/flights/search?q=CONTRAIL1111
+app.get<{ Querystring: { q: string } }>('/api/flights/search', async (req, reply) => {
+  const q = req.query.q?.toLowerCase().trim();
+  if (!q) {
+    return reply.status(400).send({ error: 'missing query' });
+  }
+
+  const raw = await redis.hgetall(REDIS_FLIGHTS_KEY);
+  const match = Object.values(raw)
+    .map((v) => JSON.parse(v) as FlightEvent)
+    .find((f) => f.icao24.toLowerCase() === q || f.callsign.toLowerCase().includes(q));
+
+  if (!match) {
+    return reply.status(404).send({ error: 'not found' });
+  }
+  return reply.send(match);
+});
+
 app.get('/health', async () => ({ status: 'ok' }));
 
 await app.listen({ port: PORT, host: '0.0.0.0' });

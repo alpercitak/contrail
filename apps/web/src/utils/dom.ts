@@ -14,6 +14,7 @@ export const DOM = {
 
   updates: mustGet<HTMLSpanElement>('updates'),
   statusAircrafts: mustGet<HTMLSpanElement>('status-aircrafts'),
+  search: mustGet<HTMLInputElement>('search'),
 
   dot: mustGet<HTMLDivElement>('dot'),
   statusText: mustGet<HTMLSpanElement>('status-text'),

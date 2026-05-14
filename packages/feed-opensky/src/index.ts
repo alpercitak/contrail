@@ -66,7 +66,6 @@ const isValidFlight = (flight: FlightEvent): boolean =>
   !!flight.callsign?.trim() && flight.speed > 50 && flight.heading !== 0;
 
 export class FeedOpenSky implements Feed {
-  private cache: Array<FlightEvent> = [];
   private config: FeedOpenskyConfig;
 
   constructor(config: FeedOpenskyConfig) {
@@ -89,8 +88,6 @@ export class FeedOpenSky implements Feed {
       .map(mapState)
       .filter((e): e is FlightEvent => e !== null)
       .filter(isValidFlight);
-
-    this.cache = events;
 
     return events;
   }
