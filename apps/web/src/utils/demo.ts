@@ -1,24 +1,25 @@
 import { DEFAULT_FLEET_SIZE, DEFAULT_TICK_MS } from '@contrail/shared';
-import { upsertMarker } from './marker';
-import { incrementUpdates, setStatus, updateAircraftCount } from './hud';
+import { upsertFlight } from './marker';
+import { addTrailPoint } from './trail';
+import { incrementUpdates, setStatus } from './hud';
 
 export const startDemo = async () => {
   const { FeedMock } = await import('@contrail/feed-mock');
-  const feedMock = new FeedMock({ fleetSize: DEFAULT_FLEET_SIZE, tickMs: DEFAULT_TICK_MS });
-  const flights = feedMock.snapshot();
+  const feed = new FeedMock({ fleetSize: DEFAULT_FLEET_SIZE, tickMs: DEFAULT_TICK_MS });
 
-  for (const flight of flights) {
-    upsertMarker(flight);
+  for (const flight of feed.snapshot()) {
+    upsertFlight(flight);
+    addTrailPoint(flight.icao24, flight.lon, flight.lat);
   }
 
   setInterval(async () => {
-    const events = await feedMock.fetch();
+    const events = await feed.fetch();
     for (const flight of events) {
-      upsertMarker(flight);
-      incrementUpdates(events.length);
+      upsertFlight(flight);
+      addTrailPoint(flight.icao24, flight.lon, flight.lat);
     }
+    incrementUpdates(events.length);
   }, DEFAULT_TICK_MS);
 
-  setStatus('demo');
-  updateAircraftCount(flights.length);
+  setStatus('online');
 };

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "VITE_RUNTIME_MODE=full turbo run dev",
+    "dev": "turbo run dev",
     "build": "turbo build",
     "clean": "turbo clean"
   },

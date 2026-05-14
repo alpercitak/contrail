@@ -5,7 +5,6 @@ COPY . .
 RUN npm install -g bun
 RUN bun install
 
-ENV VITE_RUNTIME_MODE=full
 RUN bun run build --cwd apps/web
 
 FROM nginx:alpine

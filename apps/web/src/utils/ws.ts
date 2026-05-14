@@ -1,32 +1,31 @@
 import type { FlightEvent, BoundingBox } from '@contrail/shared/types';
 import { map } from './map';
-import { upsertMarker, removeStaleMarkers } from './marker';
+import { upsertFlight, removeStaleFlights } from './marker';
+import { addTrailPoint } from './trail';
 import { resetUpdates, incrementUpdates, setStatus } from './hud';
 
-const CHUNK_SIZE = 50;
-
 const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
-
-const processChunk = (flights: Array<FlightEvent>, index = 0) => {
-  const end = Math.min(index + CHUNK_SIZE, flights.length);
-  for (let i = index; i < end; i++) upsertMarker(flights[i]);
-  if (end < flights.length) {
-    requestAnimationFrame(() => processChunk(flights, end));
-  }
-};
 
 worker.onmessage = (e) => {
   const { type } = e.data;
 
   if (type === 'snapshot') {
-    removeStaleMarkers(new Set((e.data.flights as FlightEvent[]).map((f) => f.icao24)));
-    processChunk(e.data.flights);
+    const flights = e.data.flights as Array<FlightEvent>;
+    removeStaleFlights(new Set(flights.map((f) => f.icao24)));
+    for (const flight of flights) {
+      upsertFlight(flight);
+      addTrailPoint(flight.icao24, flight.lon, flight.lat);
+    }
     resetUpdates();
     return;
   }
 
   if (type === 'batch') {
-    processChunk(e.data.flights);
+    const flights = e.data.flights as FlightEvent[];
+    for (const flight of flights) {
+      upsertFlight(flight);
+      addTrailPoint(flight.icao24, flight.lon, flight.lat);
+    }
     incrementUpdates(e.data.count);
     return;
   }
