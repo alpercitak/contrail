@@ -109,7 +109,18 @@ const main = async () => {
   };
 
   const tick = async () => {
-    const events = await feed.fetch();
+    let events;
+
+    try {
+      events = await feed.fetch();
+    } catch (err) {
+      logger.warn(`Error fetching events: ${err}`);
+    }
+
+    if (!events) {
+      return;
+    }
+
     const pipeline = redis.pipeline();
 
     for (const flight of events) {
