@@ -36,6 +36,7 @@ map.on('load', () => {
   if (IS_DEMO) {
     startDemo();
   } else {
+    sendViewport();
     connectWS('/ws');
   }
 });
