@@ -3,6 +3,7 @@ import fastifyWebsocket, { type WebSocket } from '@fastify/websocket';
 import Redis from 'ioredis';
 import { createLogger } from '@contrail/logger';
 import { DEFAULT_REDIS_URL, REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
+import { decodeGatewayMessage, encodeGatewayMessage } from '@contrail/shared';
 import type { FlightEvent, GatewayMessage, BoundingBox } from '@contrail/shared/types';
 
 const logger = createLogger('gateway');
@@ -55,7 +56,7 @@ const sendSnapshot = async (client: WebSocket, bbox: BoundingBox) => {
   if (client.readyState !== 1) {
     return;
   }
-  client.send(JSON.stringify({ type: 'snapshot', flights } satisfies GatewayMessage));
+  client.send(JSON.stringify(encodeGatewayMessage({ type: 'snapshot', flights } satisfies GatewayMessage)));
 };
 
 const getCellId = (lat: number, lon: number) => `${Math.floor(lon / GRID_SIZE)}:${Math.floor(lat / GRID_SIZE)}`;
@@ -128,10 +129,12 @@ const sendBatch = (batch: Array<FlightEvent>) => {
       continue;
     }
 
-    const payload = JSON.stringify({
-      type: 'batch',
-      flights,
-    } satisfies GatewayMessage);
+    const payload = JSON.stringify(
+      encodeGatewayMessage({
+        type: 'batch',
+        flights,
+      } satisfies GatewayMessage),
+    );
 
     for (const client of clients) {
       if (client.readyState !== 1) {
@@ -188,14 +191,20 @@ sub.on('message', (_channel, message) => {
 });
 
 const app = Fastify({ logger: false });
-await app.register(fastifyWebsocket);
+await app.register(fastifyWebsocket, {
+  options: {
+    perMessageDeflate: {
+      threshold: 1024,
+    },
+  },
+});
 
 app.get('/ws', { websocket: true }, async (socket) => {
   logger.info(`Client connected`);
 
   socket.on('message', (raw: Buffer | string) => {
     try {
-      const msg = JSON.parse(raw.toString()) as GatewayMessage;
+      const msg = decodeGatewayMessage(JSON.parse(raw.toString()));
       if (msg.type === 'viewport') {
         registerClient(socket, msg.bbox);
         sendSnapshot(socket, msg.bbox).catch((err) => {

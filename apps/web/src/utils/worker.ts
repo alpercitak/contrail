@@ -1,4 +1,5 @@
-import type { FlightEvent, GatewayMessage, BoundingBox } from '@contrail/shared/types';
+import type { FlightEvent, BoundingBox } from '@contrail/shared/types';
+import { decodeGatewayMessage, encodeGatewayMessage } from '@contrail/shared';
 import { toAircraftFeature, type AircraftFeature } from './aircraft-feature';
 
 type MainMessage = { type: 'connect'; url: string } | { type: 'viewport'; bbox: BoundingBox };
@@ -81,12 +82,12 @@ const connect = (url: string) => {
     self.postMessage({ type: 'status', value: 'online' } satisfies WorkerMessage);
     retryDelay = 1000;
     if (bbox) {
-      ws?.send(JSON.stringify({ type: 'viewport', bbox }));
+      ws?.send(JSON.stringify(encodeGatewayMessage({ type: 'viewport', bbox })));
     }
   });
 
   ws.addEventListener('message', (e) => {
-    const msg = JSON.parse(e.data) as GatewayMessage;
+    const msg = decodeGatewayMessage(JSON.parse(e.data));
 
     if (msg.type === 'snapshot') {
       knownState.clear();
@@ -130,7 +131,7 @@ self.onmessage = (e: MessageEvent<MainMessage>) => {
   if (msg.type === 'viewport') {
     bbox = msg.bbox;
     if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'viewport', bbox }));
+      ws.send(JSON.stringify(encodeGatewayMessage({ type: 'viewport', bbox })));
     }
   }
 };
