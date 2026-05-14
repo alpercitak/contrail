@@ -50,8 +50,14 @@ const getSnapshot = async (): Promise<Array<FlightEvent>> => {
 const inViewport = (flight: FlightEvent, bbox: BoundingBox): boolean =>
   flight.lat >= bbox.latMin && flight.lat <= bbox.latMax && flight.lon >= bbox.lonMin && flight.lon <= bbox.lonMax;
 
+const sameBBox = (a: BoundingBox | undefined, b: BoundingBox): boolean =>
+  a?.latMin === b.latMin && a.latMax === b.latMax && a.lonMin === b.lonMin && a.lonMax === b.lonMax;
+
 const sendSnapshot = async (client: WebSocket, bbox: BoundingBox) => {
   const snapshot = await getSnapshot();
+  if (!sameBBox(clientViewports.get(client), bbox)) {
+    return;
+  }
   const flights = snapshot.filter((flight) => inViewport(flight, bbox));
   if (client.readyState !== 1) {
     return;
