@@ -6,9 +6,19 @@ import { searchFlight } from './utils/search';
 import { connectWS, sendViewport } from './utils/ws';
 
 const IS_DEMO = import.meta.env.VITE_RUNTIME_MODE === 'demo';
+const VIEWPORT_DEBOUNCE_MS = 50;
+
+let viewportTimer: ReturnType<typeof setTimeout> | null = null;
 
 const onViewportChange = () => {
-  sendViewport();
+  if (viewportTimer) {
+    clearTimeout(viewportTimer);
+  }
+
+  viewportTimer = setTimeout(() => {
+    viewportTimer = null;
+    sendViewport();
+  }, VIEWPORT_DEBOUNCE_MS);
 };
 
 DOM.panelClose.addEventListener('click', deselectMarker);
