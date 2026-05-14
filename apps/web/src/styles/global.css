@@ -16,6 +16,8 @@
   --online: #22c55e;
   --surface-bg: rgba(10, 12, 15, 0.85);
   --surface-blur: blur(8px);
+  --font-family: 'Space Grotesk', sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
 }
 
 html,
@@ -24,7 +26,7 @@ body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-family);
   overflow: hidden;
 }
 
@@ -41,7 +43,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text-muted) !important;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: 10px;
 }
 .maplibregl-ctrl-attrib a {
@@ -49,7 +51,7 @@ body {
 }
 
 .text--primary {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-family-mono);
   font-weight: 700;
   color: var(--accent);
   letter-spacing: 0.08em;
@@ -62,8 +64,8 @@ body {
 
 #hud {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 12px;
+  left: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -72,7 +74,7 @@ body {
 }
 
 .hud-logo {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.15em;
@@ -86,7 +88,7 @@ body {
   right: 12px;
   display: grid;
   gap: 8px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: 11px;
   color: var(--text-muted);
   z-index: 800;
@@ -132,7 +134,7 @@ body {
   border-radius: 4px;
   padding: 6px 12px;
   backdrop-filter: var(--surface-blur);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: 11px;
   color: var(--text);
   outline: none;
@@ -188,7 +190,7 @@ body {
 }
 
 .panel-callsign {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: 15px;
   font-weight: 700;
   color: var(--accent);
@@ -196,7 +198,7 @@ body {
 }
 
 .panel-icao {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: 10px;
   color: var(--text-muted);
 }
@@ -238,7 +240,7 @@ body {
 }
 
 .field-value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
