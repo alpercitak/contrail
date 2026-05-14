@@ -1,5 +1,8 @@
 # Contrail
 
+![Redis](https://img.shields.io/badge/Redis-000000?style=flat-square&logo=redis&logoColor=FF4438)
+![WebSocket](https://img.shields.io/badge/WebSocket-000000?style=flat-square&logo=socketdotio&logoColor=white)
+![MapLibre](https://img.shields.io/badge/MapLibre-000000?style=flat-square&logo=maplibre&logoColor=white)
 ![Build](https://img.shields.io/github/actions/workflow/status/alpercitak/contrail/build.yaml?style=flat-square&label=&color=2ea44f)
 ![License](https://img.shields.io/badge/MIT-2ea44f?style=flat-square)
 
