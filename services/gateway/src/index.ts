@@ -140,8 +140,6 @@ const flushBatch = () => {
       client.send(payload);
     }
   }
-
-  logger.info(`Batch flushed: ${batch.length} updates`);
 };
 
 sub.subscribe(REDIS_CHANNEL, (err) => {

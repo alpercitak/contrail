@@ -56,6 +56,8 @@ services:
       REDIS_URL: redis://redis:6379
       FLEET_SIZE: "150"
       TICK_MS: "5000"
+      # OPENSKY_CLIENT_ID:
+      # OPENSKY_CLIENT_SECRET:
     labels:
       service: feeder
     depends_on:
@@ -68,9 +70,6 @@ services:
       dockerfile: apps/web/Dockerfile
     ports:
       - "5173:80"
-    environment:
-      VITE_API_PROXY: http://api:3002
-      VITE_WS_PROXY: ws://gateway:3001
     depends_on:
       - gateway
 
