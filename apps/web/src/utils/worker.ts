@@ -8,7 +8,6 @@ type WorkerMessage =
   | { type: 'status'; value: 'online' | 'connecting' | 'error' };
 
 const MIN_DISTANCE = 0.01;
-const MIN_HEADING_DELTA = 2;
 
 let ws: WebSocket | null = null;
 let bbox: BoundingBox | null = null;
@@ -24,8 +23,7 @@ const inViewport = (flight: FlightEvent, b: BoundingBox): boolean =>
 const hasChanged = (prev: FlightEvent, next: FlightEvent): boolean => {
   const latDiff = Math.abs(prev.lat - next.lat);
   const lonDiff = Math.abs(prev.lon - next.lon);
-  const hdgDiff = Math.abs(prev.heading - next.heading);
-  return latDiff > MIN_DISTANCE || lonDiff > MIN_DISTANCE || hdgDiff > MIN_HEADING_DELTA;
+  return latDiff > MIN_DISTANCE || lonDiff > MIN_DISTANCE;
 };
 
 const flush = () => {
@@ -78,7 +76,9 @@ const connect = (url: string) => {
     if (msg.type === 'snapshot') {
       knownState.clear();
       const flights = bbox ? msg.flights.filter((f) => inViewport(f, bbox!)) : msg.flights;
-      for (const f of flights) knownState.set(f.icao24, f);
+      for (const f of flights) {
+        knownState.set(f.icao24, f);
+      }
       self.postMessage({ type: 'snapshot', flights } satisfies WorkerMessage);
       return;
     }

@@ -7,8 +7,6 @@ const mustGet = <T extends HTMLElement>(id: string): T => {
 };
 
 export const DOM = {
-  map: mustGet<HTMLDivElement>('map'),
-
   panel: mustGet<HTMLDivElement>('panel'),
   panelClose: mustGet<HTMLButtonElement>('panel-close'),
 
