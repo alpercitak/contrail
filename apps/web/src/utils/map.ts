@@ -19,7 +19,7 @@ const AIRCRAFT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24
 
 const loadAircraftIcon = (): Promise<void> =>
   new Promise((resolve, reject) => {
-    const img = new Image(24, 24);
+    const img = new Image(36, 36);
     img.onload = () => {
       map.addImage('aircraft-icon', img, { sdf: true });
       resolve();

@@ -1,17 +1,14 @@
 import { startDemo } from './utils/demo';
 import { DOM } from './utils/dom';
-import { updateAircraftCount } from './utils/hud';
 import { map } from './utils/map';
-import { cullOutOfViewport, deselectMarker, flights } from './utils/marker';
+import { deselectMarker } from './utils/marker';
 import { searchFlight } from './utils/search';
 import { connectWS, sendViewport } from './utils/ws';
 
 const IS_DEMO = import.meta.env.VITE_RUNTIME_MODE === 'demo';
 
 const onViewportChange = () => {
-  cullOutOfViewport();
   sendViewport();
-  updateAircraftCount(flights.size);
 };
 
 DOM.panelClose.addEventListener('click', deselectMarker);
