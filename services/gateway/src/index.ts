@@ -21,7 +21,7 @@ const sub = new Redis(REDIS_URL);
 const regionClients = new Map<string, Set<WebSocket>>();
 const clientRegions = new Map<WebSocket, Set<string>>();
 const clientViewports = new Map<WebSocket, BoundingBox>();
-const pendingUpdates: Array<FlightEvent> = [];
+const pendingUpdates = new Map<string, FlightEvent>();
 
 let cachedSnapshot: Array<FlightEvent> = [];
 let lastSnapshot = 0;
@@ -110,11 +110,14 @@ const removeClient = (client: WebSocket) => {
 };
 
 const flushBatch = () => {
-  if (pendingUpdates.length === 0) {
+  if (pendingUpdates.size === 0) {
     return;
   }
 
-  const batch = pendingUpdates.splice(0, MAX_BATCH_SIZE);
+  const batch = Array.from(pendingUpdates.values()).slice(0, MAX_BATCH_SIZE);
+  for (const flight of batch) {
+    pendingUpdates.delete(flight.icao24);
+  }
 
   const grouped = new Map<string, Array<FlightEvent>>();
 
@@ -169,7 +172,8 @@ sub.on('message', (_channel, message) => {
     if (msg.type === 'reset') {
       return;
     }
-    pendingUpdates.push(msg as FlightEvent);
+    const flight = msg as FlightEvent;
+    pendingUpdates.set(flight.icao24, flight);
   } catch (err) {
     logger.error(`Failed to parse event: ${err}`);
   }
