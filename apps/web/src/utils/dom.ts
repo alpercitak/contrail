@@ -12,8 +12,8 @@ export const DOM = {
   panel: mustGet<HTMLDivElement>('panel'),
   panelClose: mustGet<HTMLButtonElement>('panel-close'),
 
-  updates: mustGet<HTMLSpanElement>('updates'),
-  statusAircrafts: mustGet<HTMLSpanElement>('status-aircrafts'),
+  updateCount: mustGet<HTMLSpanElement>('updateCount'),
+  aircraftCount: mustGet<HTMLSpanElement>('aircraftCount'),
   search: mustGet<HTMLInputElement>('search'),
 
   dot: mustGet<HTMLDivElement>('dot'),

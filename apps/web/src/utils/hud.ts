@@ -14,16 +14,16 @@ const animateCount = (el: HTMLElement, target: number) => {
 
 export const incrementUpdates = (count: number) => {
   updateCount += count;
-  DOM.updates.textContent = String(updateCount);
+  DOM.updateCount.textContent = String(updateCount);
 };
 
 export const resetUpdates = () => {
   updateCount = 0;
-  DOM.updates.textContent = '0';
+  DOM.updateCount.textContent = '0';
 };
 
 export const updateAircraftCount = (count: number) => {
-  DOM.statusAircrafts.textContent = String(count);
+  DOM.aircraftCount.textContent = String(count);
 };
 
 export const setStatus = (status: Status) => {
