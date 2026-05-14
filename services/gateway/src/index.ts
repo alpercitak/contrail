@@ -10,6 +10,7 @@ const logger = createLogger('gateway');
 const PORT = Number.parseInt(process.env.PORT ?? '3001');
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 const SNAPSHOT_TTL = 1000;
+const MAX_BUFFERED_AMOUNT = 1_000_000;
 
 const store = new Redis(REDIS_URL);
 const sub = new Redis(REDIS_URL);
@@ -65,9 +66,17 @@ const broadcast = (flight: FlightEvent) => {
       continue;
     }
     const bbox = clientViewports.get(client);
-    if (!bbox || isInViewport(flight, bbox)) {
-      client.send(payload);
+    if (bbox && !isInViewport(flight, bbox)) {
+      continue;
     }
+    if (client.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+      logger.warn({ bufferedAmount: client.bufferedAmount }, 'Dropping slow client (backpressure exceeded)');
+      clients.delete(client);
+      clientViewports.delete(client);
+      client.terminate();
+      continue;
+    }
+    client.send(payload);
   }
 };
 
