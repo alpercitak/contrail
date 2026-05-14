@@ -109,16 +109,7 @@ const removeClient = (client: WebSocket) => {
   clientViewports.delete(client);
 };
 
-const flushBatch = () => {
-  if (pendingUpdates.size === 0) {
-    return;
-  }
-
-  const batch = Array.from(pendingUpdates.values()).slice(0, MAX_BATCH_SIZE);
-  for (const flight of batch) {
-    pendingUpdates.delete(flight.icao24);
-  }
-
+const sendBatch = (batch: Array<FlightEvent>) => {
   const grouped = new Map<string, Array<FlightEvent>>();
 
   for (const flight of batch) {
@@ -155,6 +146,23 @@ const flushBatch = () => {
 
       client.send(payload);
     }
+  }
+};
+
+const flushBatch = () => {
+  while (pendingUpdates.size > 0) {
+    const batch: Array<FlightEvent> = [];
+
+    for (const flight of pendingUpdates.values()) {
+      batch.push(flight);
+      pendingUpdates.delete(flight.icao24);
+
+      if (batch.length >= MAX_BATCH_SIZE) {
+        break;
+      }
+    }
+
+    sendBatch(batch);
   }
 };
 
