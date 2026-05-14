@@ -3,32 +3,25 @@ import { fetchAndDrawHistory } from './history';
 import { updateAircraftCount } from './hud';
 import { map, setAircraftData, setSelectedFilter, clearSelectedFilter, setHistoryTrailData } from './map';
 import { updatePanel, showPanel, hidePanel } from './panel';
+import { scheduleMapDataRender } from './render-scheduler';
 
 export const flights = new Map<string, FlightEvent>();
 let selectedIcao: string | null = null;
-let renderScheduled = false;
 
-const scheduleRender = () => {
-  if (renderScheduled) {
-    return;
-  }
-  renderScheduled = true;
-  requestAnimationFrame(() => {
-    const features: Array<GeoJSON.Feature> = Array.from(flights.values()).map((f) => ({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [f.lon, f.lat] },
-      properties: {
-        icao24: f.icao24,
-        callsign: f.callsign,
-        altitude: f.altitude,
-        speed: f.speed,
-        heading: f.heading,
-      },
-    }));
-    setAircraftData(features);
-    updateAircraftCount(features.length);
-    renderScheduled = false;
-  });
+const renderAircraft = () => {
+  const features: Array<GeoJSON.Feature> = Array.from(flights.values()).map((f) => ({
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [f.lon, f.lat] },
+    properties: {
+      icao24: f.icao24,
+      callsign: f.callsign,
+      altitude: f.altitude,
+      speed: f.speed,
+      heading: f.heading,
+    },
+  }));
+  setAircraftData(features);
+  updateAircraftCount(features.length);
 };
 
 export const upsertFlight = (flight: FlightEvent) => {
@@ -36,12 +29,12 @@ export const upsertFlight = (flight: FlightEvent) => {
   if (selectedIcao === flight.icao24) {
     updatePanel(flight);
   }
-  scheduleRender();
+  scheduleMapDataRender(renderAircraft);
 };
 
 export const removeFlight = (icao24: string) => {
   flights.delete(icao24);
-  scheduleRender();
+  scheduleMapDataRender(renderAircraft);
 };
 
 export const removeStaleFlights = (activeIcaos: Set<string>) => {
@@ -50,7 +43,7 @@ export const removeStaleFlights = (activeIcaos: Set<string>) => {
       flights.delete(icao24);
     }
   }
-  scheduleRender();
+  scheduleMapDataRender(renderAircraft);
 };
 
 export const cullOutOfViewport = () => {
@@ -63,7 +56,7 @@ export const cullOutOfViewport = () => {
     }
   }
   if (changed) {
-    scheduleRender();
+    scheduleMapDataRender(renderAircraft);
   }
 };
 
