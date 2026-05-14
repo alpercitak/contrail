@@ -9,6 +9,7 @@ const logger = createLogger('gateway');
 
 const PORT = Number.parseInt(process.env.PORT ?? '3001');
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
+const SNAPSHOT_TTL = 1000;
 
 const store = new Redis(REDIS_URL);
 const sub = new Redis(REDIS_URL);
@@ -16,12 +17,38 @@ const sub = new Redis(REDIS_URL);
 const clients = new Set<WebSocket>();
 const clientViewports = new Map<WebSocket, BoundingBox>();
 
+let cachedSnapshot: Array<FlightEvent> = [];
+let lastSnapshot = 0;
+
+const safeParse = (v: string): FlightEvent | null => {
+  try {
+    return JSON.parse(v);
+  } catch {
+    return null;
+  }
+};
+
+const getSnapshot = async (): Promise<Array<FlightEvent>> => {
+  const now = Date.now();
+
+  if (now - lastSnapshot < SNAPSHOT_TTL) {
+    return cachedSnapshot;
+  }
+
+  const raw = await store.hgetall(REDIS_FLIGHTS_KEY);
+
+  cachedSnapshot = Object.values(raw).map(safeParse).filter(Boolean) as Array<FlightEvent>;
+
+  lastSnapshot = now;
+
+  return cachedSnapshot;
+};
+
 const isInViewport = (flight: FlightEvent, bbox: BoundingBox): boolean =>
   flight.lat >= bbox.latMin && flight.lat <= bbox.latMax && flight.lon >= bbox.lonMin && flight.lon <= bbox.lonMax;
 
 const broadcastSnapshot = async () => {
-  const raw = await store.hgetall(REDIS_FLIGHTS_KEY);
-  const flights: Array<FlightEvent> = Object.values(raw).map((v) => JSON.parse(v));
+  const flights = await getSnapshot();
   const payload = JSON.stringify({ type: 'snapshot', flights } satisfies GatewayMessage);
   for (const client of clients) {
     if (client.readyState === 1) {
@@ -74,8 +101,7 @@ app.get('/ws', { websocket: true }, async (socket) => {
   clients.add(socket);
   logger.info(`Client connected | total: ${clients.size}`);
 
-  const raw = await store.hgetall(REDIS_FLIGHTS_KEY);
-  const flights: FlightEvent[] = Object.values(raw).map((v) => JSON.parse(v));
+  const flights = await getSnapshot();
   socket.send(JSON.stringify({ type: 'snapshot', flights } satisfies GatewayMessage));
 
   socket.on('message', (raw: Buffer | string) => {
