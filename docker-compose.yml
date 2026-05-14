@@ -71,7 +71,10 @@ services:
     ports:
       - "5173:80"
     depends_on:
-      - gateway
+      api:
+        condition: service_started
+      gateway-lb:
+        condition: service_started
 
   grafana:
     image: grafana/grafana:latest
