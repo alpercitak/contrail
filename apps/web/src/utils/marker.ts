@@ -1,7 +1,8 @@
 import type { FlightEvent } from '@contrail/shared/types';
-import { map, setAircraftData, setSelectedFilter, clearSelectedFilter } from './map';
-import { updatePanel, showPanel, hidePanel } from './panel';
+import { fetchAndDrawHistory } from './history';
 import { updateAircraftCount } from './hud';
+import { map, setAircraftData, setSelectedFilter, clearSelectedFilter, setHistoryTrailData } from './map';
+import { updatePanel, showPanel, hidePanel } from './panel';
 
 export const flights = new Map<string, FlightEvent>();
 let selectedIcao: string | null = null;
@@ -73,6 +74,7 @@ export const selectAircraft = (icao24: string) => {
   if (flight) {
     updatePanel(flight);
     showPanel();
+    fetchAndDrawHistory(icao24);
   }
 };
 
@@ -80,6 +82,7 @@ export const deselectMarker = () => {
   selectedIcao = null;
   clearSelectedFilter();
   hidePanel();
+  setHistoryTrailData([]);
 };
 
 map.on('click', 'aircraft', (e) => {

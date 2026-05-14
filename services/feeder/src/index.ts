@@ -73,6 +73,8 @@ const main = async () => {
       const serialized = JSON.stringify(flight);
       pipeline.hset(REDIS_FLIGHTS_KEY, flight.icao24, serialized);
       pipeline.publish(REDIS_CHANNEL, serialized);
+      pipeline.lpush(`flight:history:${flight.icao24}`, serialized);
+      pipeline.ltrim(`flight:history:${flight.icao24}`, 0, 49);
     }
 
     await pipeline.exec();

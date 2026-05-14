@@ -25,15 +25,6 @@ app.get('/api/flights', async (_req, reply) => {
   return reply.send(flights);
 });
 
-// GET /flights/:icao24 — single aircraft
-app.get<{ Params: { icao24: string } }>('/api/flights/:icao24', async (req, reply) => {
-  const raw = await redis.hget(REDIS_FLIGHTS_KEY, req.params.icao24);
-  if (!raw) {
-    return reply.status(404).send({ error: 'not found' });
-  }
-  return reply.send(JSON.parse(raw) as FlightEvent);
-});
-
 // GET /api/flights/search?q=CONTRAIL1111
 app.get<{ Querystring: { q: string } }>('/api/flights/search', async (req, reply) => {
   const q = req.query.q?.toLowerCase().trim();
@@ -50,6 +41,24 @@ app.get<{ Querystring: { q: string } }>('/api/flights/search', async (req, reply
     return reply.status(404).send({ error: 'not found' });
   }
   return reply.send(match);
+});
+
+// GET /flights/:icao24 — single aircraft
+app.get<{ Params: { icao24: string } }>('/api/flights/:icao24', async (req, reply) => {
+  const raw = await redis.hget(REDIS_FLIGHTS_KEY, req.params.icao24);
+  if (!raw) {
+    return reply.status(404).send({ error: 'not found' });
+  }
+  return reply.send(JSON.parse(raw) as FlightEvent);
+});
+
+app.get<{ Params: { icao24: string } }>('/api/flights/:icao24/history', async (req, reply) => {
+  const raw = await redis.lrange(`flight:history:${req.params.icao24}`, 0, -1);
+  if (!raw.length) {
+    return reply.status(404).send({ error: 'not found' });
+  }
+  const history = raw.map((v) => JSON.parse(v) as FlightEvent);
+  return reply.send(history);
 });
 
 app.get('/health', async () => ({ status: 'ok' }));

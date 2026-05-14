@@ -41,6 +41,11 @@ map.on('load', async () => {
     data: { type: 'FeatureCollection', features: [] },
   });
 
+  map.addSource('history-trails', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] },
+  });
+
   map.addLayer({
     id: 'trails',
     type: 'line',
@@ -92,6 +97,17 @@ map.on('load', async () => {
       'icon-halo-width': 1,
     },
   });
+
+  map.addLayer({
+    id: 'history-trails',
+    type: 'line',
+    source: 'history-trails',
+    paint: {
+      'line-color': '#f59e0b',
+      'line-width': 1.5,
+      'line-opacity': 0.6,
+    },
+  });
 });
 
 export const setAircraftData = (features: Array<GeoJSON.Feature>) => {
@@ -101,6 +117,11 @@ export const setAircraftData = (features: Array<GeoJSON.Feature>) => {
 
 export const setTrailData = (features: Array<GeoJSON.Feature>) => {
   const source = map.getSource('trails') as maplibregl.GeoJSONSource;
+  source?.setData({ type: 'FeatureCollection', features });
+};
+
+export const setHistoryTrailData = (features: Array<GeoJSON.Feature>) => {
+  const source = map.getSource('history-trails') as maplibregl.GeoJSONSource;
   source?.setData({ type: 'FeatureCollection', features });
 };
 
