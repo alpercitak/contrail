@@ -6,7 +6,7 @@ import { cullOutOfViewport, deselectMarker, flights } from './utils/marker';
 import { searchFlight } from './utils/search';
 import { connectWS, sendViewport } from './utils/ws';
 
-const IS_DEMO = import.meta.env.RUNTIME_MODE === 'demo';
+const IS_DEMO = import.meta.env.VITE_RUNTIME_MODE === 'demo';
 
 const onViewportChange = () => {
   cullOutOfViewport();
