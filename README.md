@@ -1,5 +1,8 @@
 # Contrail
 
+![Build](https://img.shields.io/github/actions/workflow/status/alpercitak/contrail/build.yaml?style=flat-square&label=&color=2ea44f)
+![License](https://img.shields.io/badge/MIT-2ea44f?style=flat-square)
+
 A real-time aircraft radar lab with viewport-aware WebSockets, Redis-backed flight state, and a fast map UI.
 
 Contrail streams live-looking aircraft positions into Redis, fans them out through a spatially aware WebSocket gateway, and renders them on an interactive browser map. It can run entirely from a deterministic mock fleet for development, or ingest OpenSky data when credentials are available.
