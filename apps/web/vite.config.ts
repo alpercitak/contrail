@@ -15,15 +15,16 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
+    chunkSizeWarningLimit: 1200,
+    rolldownOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('maplibre-gl')) {
-            return 'maplibre-gl';
-          }
-          if (id.includes('@contrail/feed-mock')) {
-            return 'feed-mock';
-          }
+        codeSplitting: true,
+        advancedChunks: {
+          groups: [
+            { name: 'maplibre-gl', test: /[\\/]node_modules[\\/]maplibre-gl[\\/]/ },
+            { name: 'feed-mock', test: /[\\/]packages[\\/]feed-mock[\\/]/ },
+            { name: 'vendor', test: /[\\/]node_modules[\\/]/, priority: -10 },
+          ],
         },
       },
     },

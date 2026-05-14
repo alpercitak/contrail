@@ -1,4 +1,3 @@
-import { startDemo } from './utils/demo';
 import { DOM } from './utils/dom';
 import { map } from './utils/map';
 import { deselectMarker } from './utils/marker';
@@ -42,8 +41,9 @@ DOM.search.addEventListener('keydown', async (e) => {
   }
 });
 
-map.on('load', () => {
+map.on('load', async () => {
   if (IS_DEMO) {
+    const { startDemo } = await import('./utils/demo');
     startDemo();
   } else {
     sendViewport();
