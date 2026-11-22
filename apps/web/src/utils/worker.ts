@@ -8,6 +8,7 @@ export type ShapedFlight = { flight: FlightEvent; feature: AircraftFeature };
 type WorkerMessage =
   | { type: 'snapshot'; flights: Array<ShapedFlight> }
   | { type: 'batch'; flights: Array<ShapedFlight>; count: number }
+  | { type: 'remove'; icao24s: Array<string> }
   | { type: 'status'; value: 'online' | 'connecting' | 'error' };
 
 const MIN_DISTANCE = 0.01;
@@ -43,8 +44,12 @@ const flush = () => {
   const updates = pendingUpdates;
   pendingUpdates = new Map();
 
+  const removed: Array<string> = [];
   const toRender = Array.from(updates.values()).filter((flight) => {
     if (bbox && !inViewport(flight, bbox)) {
+      if (knownState.delete(flight.icao24)) {
+        removed.push(flight.icao24);
+      }
       return false;
     }
     const prev = knownState.get(flight.icao24);
@@ -54,6 +59,10 @@ const flush = () => {
     knownState.set(flight.icao24, flight);
     return true;
   });
+
+  if (removed.length > 0) {
+    self.postMessage({ type: 'remove', icao24s: removed } satisfies WorkerMessage);
+  }
 
   if (toRender.length === 0) {
     return;
@@ -109,6 +118,14 @@ const connect = (url: string) => {
       for (const flight of msg.flights) {
         ingest(flight);
       }
+    }
+
+    if (msg.type === 'remove') {
+      for (const icao24 of msg.icao24s) {
+        knownState.delete(icao24);
+        pendingUpdates.delete(icao24);
+      }
+      self.postMessage({ type: 'remove', icao24s: msg.icao24s } satisfies WorkerMessage);
     }
   });
 

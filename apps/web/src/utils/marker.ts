@@ -29,6 +29,9 @@ export const upsertFlight = (flight: FlightEvent, feature = toAircraftFeature(fl
 };
 
 export const removeFlight = (icao24: string) => {
+  if (selectedIcao === icao24) {
+    deselectMarker();
+  }
   flights.delete(icao24);
   aircraftFeatures.delete(icao24);
   removeTrail(icao24);
@@ -44,22 +47,6 @@ export const removeStaleFlights = (activeIcaos: Set<string>) => {
     }
   }
   scheduleMapDataRender(renderAircraft);
-};
-
-export const cullOutOfViewport = () => {
-  const bounds = map.getBounds();
-  let changed = false;
-  for (const [icao24, flight] of flights) {
-    if (!bounds.contains([flight.lon, flight.lat])) {
-      flights.delete(icao24);
-      aircraftFeatures.delete(icao24);
-      removeTrail(icao24);
-      changed = true;
-    }
-  }
-  if (changed) {
-    scheduleMapDataRender(renderAircraft);
-  }
 };
 
 export const selectAircraft = (icao24: string) => {

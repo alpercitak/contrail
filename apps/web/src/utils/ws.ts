@@ -1,7 +1,7 @@
 import type { BoundingBox } from '@contrail/shared/types';
 import { incrementUpdates, resetUpdates, setStatus } from './hud';
 import { map } from './map';
-import { removeStaleFlights, upsertFlight } from './marker';
+import { removeFlight, removeStaleFlights, upsertFlight } from './marker';
 import { addTrailPoint } from './trail';
 import type { ShapedFlight } from './worker';
 
@@ -28,6 +28,13 @@ worker.onmessage = (e) => {
       addTrailPoint(flight.icao24, flight.lon, flight.lat);
     }
     incrementUpdates(e.data.count);
+    return;
+  }
+
+  if (type === 'remove') {
+    for (const icao24 of e.data.icao24s as Array<string>) {
+      removeFlight(icao24);
+    }
     return;
   }
 
