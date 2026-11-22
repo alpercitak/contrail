@@ -1,11 +1,14 @@
-import maplibregl from 'maplibre-gl';
+import { AttributionControl, type GeoJSONSource, MapLibreMap, NavigationControl, setWorkerUrl } from 'maplibre-gl';
+import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 const aircraftCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 const trailCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 const historyTrailCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 
-export const map = new maplibregl.Map({
+setWorkerUrl(mapWorkerUrl);
+
+export const map = new MapLibreMap({
   container: 'map',
   style: 'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json',
   center: [10, 52],
@@ -15,8 +18,8 @@ export const map = new maplibregl.Map({
   attributionControl: false,
 });
 
-map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
-map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+map.addControl(new NavigationControl(), 'bottom-left');
+map.addControl(new AttributionControl({ compact: true }), 'bottom-right');
 
 const AIRCRAFT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <path fill="white" d="M21,16L21,14L13,9L13,3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5L10,9L2,14L2,16L10,13.5L10,19L8,20.5L8,22L11.5,21L15,22L15,20.5L13,19L13,13.5L21,16Z"/>
@@ -116,19 +119,19 @@ map.on('load', async () => {
 });
 
 export const setAircraftData = (features: Array<GeoJSON.Feature>) => {
-  const source = map.getSource('aircraft') as maplibregl.GeoJSONSource;
+  const source = map.getSource<GeoJSONSource>('aircraft');
   aircraftCollection.features = features;
   source?.setData(aircraftCollection);
 };
 
 export const setTrailData = (features: Array<GeoJSON.Feature>) => {
-  const source = map.getSource('trails') as maplibregl.GeoJSONSource;
+  const source = map.getSource<GeoJSONSource>('trails');
   trailCollection.features = features;
   source?.setData(trailCollection);
 };
 
 export const setHistoryTrailData = (features: Array<GeoJSON.Feature>) => {
-  const source = map.getSource('history-trails') as maplibregl.GeoJSONSource;
+  const source = map.getSource<GeoJSONSource>('history-trails');
   historyTrailCollection.features = features;
   source?.setData(historyTrailCollection);
 };
