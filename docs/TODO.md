@@ -9,6 +9,7 @@
 ## Cleanup
 
 - web: `src/types/index.ts` imports `leaflet` (leftover from migration); `MarkerEntry`/`InterpolationState` are dead.
+- web: declare and import GeoJSON types so they resolve during standalone TypeScript checks.
 - README: WebSocket example shows object JSON; gateway only accepts `["v", [latMin, latMax, lonMin, lonMax]]`.
 - Add a typecheck task (services build with `bun build`, which skips type checking) and run tests + typecheck in CI.
 - Tests only cover feed-mock; add coverage for wire encode/decode, gateway cell routing, api search.
