@@ -4,7 +4,7 @@ import Redis from 'ioredis';
 import { createLogger } from '@contrail/logger';
 import { decodeGatewayMessage, encodeGatewayMessage } from '@contrail/shared';
 import { DEFAULT_REDIS_URL, REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
-import type { BoundingBox, FlightEvent, GatewayMessage } from '@contrail/shared/types';
+import type { BoundingBox, FlightEvent, GatewayMessage, RemoveMessage } from '@contrail/shared/types';
 
 const logger = createLogger('gateway');
 
@@ -38,6 +38,21 @@ const safeParse = (v: string): FlightEvent | null => {
 };
 
 const getCellId = (lat: number, lon: number) => `${Math.floor(lon / GRID_SIZE)}:${Math.floor(lat / GRID_SIZE)}`;
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+// Client-supplied bbox: reject non-numbers and clamp to the globe so the cell loop stays bounded.
+const toValidBBox = (bbox: BoundingBox): BoundingBox | null => {
+  if (![bbox.latMin, bbox.latMax, bbox.lonMin, bbox.lonMax].every(Number.isFinite)) {
+    return null;
+  }
+  return {
+    latMin: clamp(bbox.latMin, -90, 90),
+    latMax: clamp(bbox.latMax, -90, 90),
+    lonMin: clamp(bbox.lonMin, -180, 180),
+    lonMax: clamp(bbox.lonMax, -180, 180),
+  };
+};
 
 const getCellsForBBox = (bbox: BoundingBox) => {
   const cells: Array<string> = [];
@@ -206,14 +221,35 @@ sub.subscribe(REDIS_CHANNEL, (err) => {
   logger.info(`Subscribed to ${REDIS_CHANNEL}`);
 });
 
+const broadcastRemove = (icao24s: Array<string>) => {
+  const payload = JSON.stringify(encodeGatewayMessage({ type: 'remove', icao24s } satisfies GatewayMessage));
+  for (const client of clientViewports.keys()) {
+    if (client.readyState === 1) {
+      client.send(payload);
+    }
+  }
+};
+
 sub.on('message', (_channel, message) => {
   try {
-    const msg = JSON.parse(message);
-    if (msg.type === 'reset') {
+    const msg = JSON.parse(message) as FlightEvent | RemoveMessage | { type: 'reset' };
+    if (!('type' in msg)) {
+      pendingUpdates.set(msg.icao24, msg);
       return;
     }
-    const flight = msg as FlightEvent;
-    pendingUpdates.set(flight.icao24, flight);
+    if (msg.type === 'remove') {
+      for (const icao24 of msg.icao24s) {
+        pendingUpdates.delete(icao24);
+      }
+      broadcastRemove(msg.icao24s);
+    }
+    if (msg.type === 'reset') {
+      // Feeder restarted with a new fleet: resync every client so old aircraft disappear.
+      lastSnapshot = 0;
+      for (const [client, bbox] of clientViewports) {
+        sendSnapshot(client, bbox).catch((err) => logger.error(`Failed to send reset snapshot: ${err}`));
+      }
+    }
   } catch (err) {
     logger.error(`Failed to parse event: ${err}`);
   }
@@ -234,9 +270,10 @@ app.get('/ws', { websocket: true }, async (socket) => {
   socket.on('message', (raw: Buffer | string) => {
     try {
       const msg = decodeGatewayMessage(JSON.parse(raw.toString()));
-      if (msg.type === 'viewport') {
-        registerClient(socket, msg.bbox);
-        sendSnapshot(socket, msg.bbox).catch((err) => {
+      const bbox = msg.type === 'viewport' ? toValidBBox(msg.bbox) : null;
+      if (bbox) {
+        registerClient(socket, bbox);
+        sendSnapshot(socket, bbox).catch((err) => {
           logger.error(`Failed to send viewport snapshot: ${err}`);
         });
       }
@@ -252,7 +289,7 @@ app.get('/ws', { websocket: true }, async (socket) => {
   });
 });
 
-app.get('/health', async () => ({ status: 'ok', clients: regionClients.size }));
+app.get('/health', async () => ({ status: 'ok', clients: clientViewports.size }));
 
 await app.listen({ port: PORT, host: '0.0.0.0' });
 
