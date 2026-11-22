@@ -7,9 +7,11 @@
     "dev": "turbo run dev",
     "build": "turbo build",
     "clean": "turbo clean",
-    "test": "turbo test"
+    "test": "turbo test",
+    "check": "biome check"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.8",
     "turbo": "^2.9.12",
     "typescript": "catalog:"
   },
