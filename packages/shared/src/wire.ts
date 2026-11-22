@@ -8,8 +8,14 @@ export type WireSnapshotMessage = ['s', Array<WireFlight>];
 export type WireUpdateMessage = ['u', WireFlight];
 export type WireViewportMessage = ['v', WireBBox];
 export type WireBatchMessage = ['b', Array<WireFlight>];
+export type WireRemoveMessage = ['r', Array<string>];
 
-export type WireGatewayMessage = WireSnapshotMessage | WireUpdateMessage | WireViewportMessage | WireBatchMessage;
+export type WireGatewayMessage =
+  | WireSnapshotMessage
+  | WireUpdateMessage
+  | WireViewportMessage
+  | WireBatchMessage
+  | WireRemoveMessage;
 
 export const encodeFlight = (flight: FlightEvent): WireFlight => [
   flight.icao24,
@@ -52,6 +58,8 @@ export const encodeGatewayMessage = (msg: GatewayMessage): WireGatewayMessage =>
       return ['v', encodeBBox(msg.bbox)];
     case 'batch':
       return ['b', msg.flights.map(encodeFlight)];
+    case 'remove':
+      return ['r', msg.icao24s];
   }
 };
 
@@ -65,5 +73,7 @@ export const decodeGatewayMessage = (msg: WireGatewayMessage): GatewayMessage =>
       return { type: 'viewport', bbox: decodeBBox(msg[1]) };
     case 'b':
       return { type: 'batch', flights: msg[1].map(decodeFlight) };
+    case 'r':
+      return { type: 'remove', icao24s: msg[1] };
   }
 };

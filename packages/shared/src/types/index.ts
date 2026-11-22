@@ -40,4 +40,9 @@ export interface BatchMessage {
   flights: Array<FlightEvent>;
 }
 
-export type GatewayMessage = SnapshotMessage | UpdateMessage | ViewportMessage | BatchMessage;
+export interface RemoveMessage {
+  type: 'remove';
+  icao24s: Array<string>;
+}
+
+export type GatewayMessage = SnapshotMessage | UpdateMessage | ViewportMessage | BatchMessage | RemoveMessage;
