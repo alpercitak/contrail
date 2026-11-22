@@ -13,7 +13,7 @@ import {
   REDIS_FLIGHTS_KEY,
   REDIS_FLIGHTS_LAST_SEEN_KEY,
 } from '@contrail/shared/constants';
-import type { Feed, FlightEvent } from '@contrail/shared/types';
+import type { Feed, FlightEvent, RemoveMessage } from '@contrail/shared/types';
 
 const logger = createLogger('feeder');
 
@@ -27,6 +27,7 @@ const normalizeSearchValue = (value: string) => value.toLowerCase().trim();
 
 const callsignIndexMember = (flight: FlightEvent) => `${normalizeSearchValue(flight.callsign)}:${flight.icao24}`;
 const icao24IndexMember = (flight: FlightEvent) => `${normalizeSearchValue(flight.icao24)}:${flight.icao24}`;
+const historyKey = (icao24: string) => `${REDIS_FLIGHT_KEY}:history:${icao24}`;
 
 const cleanStaleFlights = async (redis: Redis) => {
   const staleBefore = Date.now() - STALE_MS;
@@ -56,6 +57,8 @@ const cleanStaleFlights = async (redis: Redis) => {
     pipeline.zrem(REDIS_FLIGHT_ICAO24S_KEY, ...staleFlights.map(icao24IndexMember));
   }
   pipeline.zrem(REDIS_FLIGHTS_LAST_SEEN_KEY, ...staleIcao24s);
+  pipeline.del(...staleIcao24s.map(historyKey));
+  pipeline.publish(REDIS_CHANNEL, JSON.stringify({ type: 'remove', icao24s: staleIcao24s } satisfies RemoveMessage));
   await pipeline.exec();
 };
 
@@ -66,7 +69,6 @@ const createFeed = async (): Promise<Feed> => {
     return new FeedOpenSky({
       clientId,
       clientSecret,
-      tickMs: DEFAULT_TICK_MS,
     });
   }
 
@@ -90,7 +92,7 @@ const main = async () => {
       return true;
     },
   });
-  let tickInterval: NodeJS.Timeout;
+  let tickTimer: NodeJS.Timeout;
 
   redis.on('connect', () => logger.info('Redis connected'));
   redis.on('ready', () => logger.info('Redis ready'));
@@ -103,7 +105,7 @@ const main = async () => {
 
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received, shutting down`);
-    clearInterval(tickInterval);
+    clearTimeout(tickTimer);
     await redis.quit();
     logger.info('shutdown complete');
     process.exit(0);
@@ -118,23 +120,32 @@ const main = async () => {
       logger.warn(`Error fetching events: ${err}`);
     }
 
-    if (!events) {
+    if (!events?.length) {
       return;
     }
 
+    const seenAt = Date.now();
+    const previous = await redis.hmget(REDIS_FLIGHTS_KEY, ...events.map((flight) => flight.icao24));
     const pipeline = redis.pipeline();
 
-    for (const flight of events) {
+    for (const [i, flight] of events.entries()) {
+      const prevRaw = previous[i];
+      const prev = prevRaw ? (JSON.parse(prevRaw) as FlightEvent) : null;
+      if (prev && prev.callsign !== flight.callsign) {
+        pipeline.hdel(REDIS_FLIGHT_BY_CALLSIGN_KEY, normalizeSearchValue(prev.callsign));
+        pipeline.zrem(REDIS_FLIGHT_CALLSIGNS_KEY, callsignIndexMember(prev));
+      }
+
       const serialized = JSON.stringify(flight);
       pipeline.hset(REDIS_FLIGHTS_KEY, flight.icao24, serialized);
       pipeline.hset(REDIS_FLIGHT_BY_ICAO24_KEY, normalizeSearchValue(flight.icao24), flight.icao24);
       pipeline.hset(REDIS_FLIGHT_BY_CALLSIGN_KEY, normalizeSearchValue(flight.callsign), flight.icao24);
       pipeline.zadd(REDIS_FLIGHT_ICAO24S_KEY, 0, icao24IndexMember(flight));
       pipeline.zadd(REDIS_FLIGHT_CALLSIGNS_KEY, 0, callsignIndexMember(flight));
-      pipeline.zadd(REDIS_FLIGHTS_LAST_SEEN_KEY, flight.timestamp ?? Date.now(), flight.icao24);
+      pipeline.zadd(REDIS_FLIGHTS_LAST_SEEN_KEY, seenAt, flight.icao24);
       pipeline.publish(REDIS_CHANNEL, serialized);
-      pipeline.lpush(`${REDIS_FLIGHT_KEY}:history:${flight.icao24}`, serialized);
-      pipeline.ltrim(`${REDIS_FLIGHT_KEY}:history:${flight.icao24}`, 0, 49);
+      pipeline.lpush(historyKey(flight.icao24), serialized);
+      pipeline.ltrim(historyKey(flight.icao24), 0, 49);
     }
 
     await pipeline.exec();
@@ -153,7 +164,14 @@ const main = async () => {
   logger.info('Cleared previous fleet');
   await tick();
   await redis.publish(REDIS_CHANNEL, JSON.stringify({ type: 'reset' }));
-  tickInterval = setInterval(tick, TICK_MS);
+
+  // Chained timeouts so a slow fetch never overlaps the next tick.
+  const loop = async () => {
+    const startedAt = Date.now();
+    await tick().catch((err) => logger.error(`Tick failed: ${err}`));
+    tickTimer = setTimeout(loop, Math.max(0, TICK_MS - (Date.now() - startedAt)));
+  };
+  tickTimer = setTimeout(loop, TICK_MS);
 
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
