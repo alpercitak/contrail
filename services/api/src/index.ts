@@ -1,21 +1,21 @@
-import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
+import Fastify from 'fastify';
 import Redis from 'ioredis';
+import { createLogger } from '@contrail/logger';
 import {
   DEFAULT_REDIS_URL,
-  REDIS_FLIGHT_KEY,
-  REDIS_FLIGHT_CALLSIGNS_KEY,
-  REDIS_FLIGHT_ICAO24S_KEY,
   REDIS_FLIGHT_BY_CALLSIGN_KEY,
   REDIS_FLIGHT_BY_ICAO24_KEY,
+  REDIS_FLIGHT_CALLSIGNS_KEY,
+  REDIS_FLIGHT_ICAO24S_KEY,
+  REDIS_FLIGHT_KEY,
   REDIS_FLIGHTS_KEY,
 } from '@contrail/shared/constants';
 import type { FlightEvent } from '@contrail/shared/types';
-import { createLogger } from '@contrail/logger';
 
 const logger = createLogger('api');
 
-const PORT = Number.parseInt(process.env.PORT ?? '3002');
+const PORT = Number.parseInt(process.env.PORT ?? '3002', 10);
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 const SEARCH_LIMIT = 25;
 

@@ -1,9 +1,9 @@
 import type { BoundingBox } from '@contrail/shared/types';
-import type { ShapedFlight } from './worker';
+import { incrementUpdates, resetUpdates, setStatus } from './hud';
 import { map } from './map';
-import { upsertFlight, removeStaleFlights } from './marker';
+import { removeStaleFlights, upsertFlight } from './marker';
 import { addTrailPoint } from './trail';
-import { resetUpdates, incrementUpdates, setStatus } from './hud';
+import type { ShapedFlight } from './worker';
 
 const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
 

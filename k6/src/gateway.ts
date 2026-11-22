@@ -1,6 +1,6 @@
-import ws from 'k6/ws';
 import { check, sleep } from 'k6';
 import { Counter, Rate, Trend } from 'k6/metrics';
+import ws from 'k6/ws';
 
 const snapshotReceived = new Counter('snapshot_received');
 const updateReceived = new Counter('updates_received');

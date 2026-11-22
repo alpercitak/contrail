@@ -1,7 +1,7 @@
 import { DEFAULT_FLEET_SIZE, DEFAULT_TICK_MS } from '@contrail/shared';
+import { incrementUpdates, setStatus } from './hud';
 import { upsertFlight } from './marker';
 import { addTrailPoint } from './trail';
-import { incrementUpdates, setStatus } from './hud';
 
 export const startDemo = async () => {
   const { FeedMock } = await import('@contrail/feed-mock');

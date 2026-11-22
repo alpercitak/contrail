@@ -1,15 +1,6 @@
 import type { BoundingBox, FlightEvent, GatewayMessage } from './types';
 
-export type WireFlight = [
-  string,
-  string,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number?,
-];
+export type WireFlight = [string, string, number, number, number, number, number, number?];
 
 export type WireBBox = [number, number, number, number];
 
@@ -18,11 +9,7 @@ export type WireUpdateMessage = ['u', WireFlight];
 export type WireViewportMessage = ['v', WireBBox];
 export type WireBatchMessage = ['b', Array<WireFlight>];
 
-export type WireGatewayMessage =
-  | WireSnapshotMessage
-  | WireUpdateMessage
-  | WireViewportMessage
-  | WireBatchMessage;
+export type WireGatewayMessage = WireSnapshotMessage | WireUpdateMessage | WireViewportMessage | WireBatchMessage;
 
 export const encodeFlight = (flight: FlightEvent): WireFlight => [
   flight.icao24,
@@ -46,12 +33,7 @@ export const decodeFlight = (flight: WireFlight): FlightEvent => ({
   timestamp: flight[7],
 });
 
-export const encodeBBox = (bbox: BoundingBox): WireBBox => [
-  bbox.latMin,
-  bbox.latMax,
-  bbox.lonMin,
-  bbox.lonMax,
-];
+export const encodeBBox = (bbox: BoundingBox): WireBBox => [bbox.latMin, bbox.latMax, bbox.lonMin, bbox.lonMax];
 
 export const decodeBBox = (bbox: WireBBox): BoundingBox => ({
   latMin: bbox[0],

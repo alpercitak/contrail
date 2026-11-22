@@ -1,6 +1,6 @@
-import type { FlightEvent, BoundingBox } from '@contrail/shared/types';
 import { decodeGatewayMessage, encodeGatewayMessage } from '@contrail/shared';
-import { toAircraftFeature, type AircraftFeature } from './aircraft-feature';
+import type { BoundingBox, FlightEvent } from '@contrail/shared/types';
+import { type AircraftFeature, toAircraftFeature } from './aircraft-feature';
 
 type MainMessage = { type: 'connect'; url: string } | { type: 'viewport'; bbox: BoundingBox };
 export type ShapedFlight = { flight: FlightEvent; feature: AircraftFeature };
@@ -92,7 +92,8 @@ const connect = (url: string) => {
 
     if (msg.type === 'snapshot') {
       knownState.clear();
-      const flights = bbox ? msg.flights.filter((f) => inViewport(f, bbox!)) : msg.flights;
+      const viewport = bbox;
+      const flights = viewport ? msg.flights.filter((f) => inViewport(f, viewport)) : msg.flights;
       for (const f of flights) {
         knownState.set(f.icao24, f);
       }

@@ -16,8 +16,8 @@
   --online: #22c55e;
   --surface-bg: rgba(10, 12, 15, 0.85);
   --surface-blur: blur(8px);
-  --font-family: 'Space Grotesk', sans-serif;
-  --font-family-mono: 'JetBrains Mono', monospace;
+  --font-family: "Space Grotesk", sans-serif;
+  --font-family-mono: "JetBrains Mono", monospace;
 }
 
 html,

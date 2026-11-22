@@ -53,18 +53,18 @@ flowchart LR
 
 ## Monorepo Map
 
-| Path | Purpose |
-| --- | --- |
-| `apps/web` | Vite map client and browser UI |
-| `services/feeder` | Polls mock/OpenSky feeds and writes flight events to Redis |
-| `services/gateway` | Fastify WebSocket gateway with grid-cell routing and batching |
-| `services/api` | Fastify REST API for snapshots, search, single aircraft, and history |
-| `packages/shared` | Shared wire types, constants, and message encode/decode helpers |
-| `packages/feed-mock` | Deterministic synthetic fleet generator |
-| `packages/feed-opensky` | OpenSky-backed feed implementation |
-| `packages/logger` | Shared structured logger |
-| `k6` | Load-test scenarios |
-| `observability` | Grafana, Loki, and Promtail config |
+| Path                    | Purpose                                                              |
+| ----------------------- | -------------------------------------------------------------------- |
+| `apps/web`              | Vite map client and browser UI                                       |
+| `services/feeder`       | Polls mock/OpenSky feeds and writes flight events to Redis           |
+| `services/gateway`      | Fastify WebSocket gateway with grid-cell routing and batching        |
+| `services/api`          | Fastify REST API for snapshots, search, single aircraft, and history |
+| `packages/shared`       | Shared wire types, constants, and message encode/decode helpers      |
+| `packages/feed-mock`    | Deterministic synthetic fleet generator                              |
+| `packages/feed-opensky` | OpenSky-backed feed implementation                                   |
+| `packages/logger`       | Shared structured logger                                             |
+| `k6`                    | Load-test scenarios                                                  |
+| `observability`         | Grafana, Loki, and Promtail config                                   |
 
 ## Quick Start
 

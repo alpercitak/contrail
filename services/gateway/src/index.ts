@@ -1,14 +1,14 @@
-import Fastify from 'fastify';
 import fastifyWebsocket, { type WebSocket } from '@fastify/websocket';
+import Fastify from 'fastify';
 import Redis from 'ioredis';
 import { createLogger } from '@contrail/logger';
-import { DEFAULT_REDIS_URL, REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
 import { decodeGatewayMessage, encodeGatewayMessage } from '@contrail/shared';
-import type { FlightEvent, GatewayMessage, BoundingBox } from '@contrail/shared/types';
+import { DEFAULT_REDIS_URL, REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
+import type { BoundingBox, FlightEvent, GatewayMessage } from '@contrail/shared/types';
 
 const logger = createLogger('gateway');
 
-const PORT = Number.parseInt(process.env.PORT ?? '3001');
+const PORT = Number.parseInt(process.env.PORT ?? '3001', 10);
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 const SNAPSHOT_TTL = 1000;
 const MAX_BUFFERED_AMOUNT = 1_000_000;
@@ -115,11 +115,13 @@ const registerClient = (client: WebSocket, bbox: BoundingBox) => {
   for (const cell of cells) {
     set.add(cell);
 
-    if (!regionClients.has(cell)) {
-      regionClients.set(cell, new Set());
+    let clients = regionClients.get(cell);
+    if (!clients) {
+      clients = new Set();
+      regionClients.set(cell, clients);
     }
 
-    regionClients.get(cell)!.add(client);
+    clients.add(client);
   }
 };
 
@@ -142,11 +144,12 @@ const sendBatch = (batch: Array<FlightEvent>) => {
   for (const flight of batch) {
     const cell = getCellId(flight.lat, flight.lon);
 
-    if (!grouped.has(cell)) {
-      grouped.set(cell, []);
+    const bucket = grouped.get(cell);
+    if (bucket) {
+      bucket.push(flight);
+    } else {
+      grouped.set(cell, [flight]);
     }
-
-    grouped.get(cell)!.push(flight);
   }
 
   for (const [cell, flights] of grouped) {

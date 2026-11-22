@@ -1,9 +1,9 @@
 import type { FlightEvent } from '@contrail/shared/types';
-import { toAircraftFeature, type AircraftFeature } from './aircraft-feature';
+import { type AircraftFeature, toAircraftFeature } from './aircraft-feature';
 import { fetchAndDrawHistory } from './history';
 import { updateAircraftCount } from './hud';
-import { map, setAircraftData, setSelectedFilter, clearSelectedFilter, setHistoryTrailData } from './map';
-import { updatePanel, showPanel, hidePanel } from './panel';
+import { clearSelectedFilter, map, setAircraftData, setHistoryTrailData, setSelectedFilter } from './map';
+import { hidePanel, showPanel, updatePanel } from './panel';
 import { scheduleMapDataRender } from './render-scheduler';
 import { removeTrail } from './trail';
 

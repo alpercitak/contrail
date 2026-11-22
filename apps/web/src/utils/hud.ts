@@ -3,15 +3,6 @@ import { DOM } from './dom';
 
 let updateCount = 0;
 
-const animateCount = (el: HTMLElement, target: number) => {
-  const current = parseInt(el.textContent ?? '0');
-  if (current >= target) {
-    return;
-  }
-  el.textContent = String(current + 1);
-  setTimeout(() => animateCount(el, target), 300);
-};
-
 export const incrementUpdates = (count: number) => {
   updateCount += count;
   DOM.updateCount.textContent = String(updateCount);

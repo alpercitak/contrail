@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
 import { FeedMock } from '../src';
+import { describe, expect, test } from 'bun:test';
 
 describe('FeedMock', () => {
   test('spawns fleet correctly', () => {

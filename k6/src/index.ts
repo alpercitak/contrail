@@ -1,5 +1,5 @@
-import { gatewayFlow } from './gateway.js';
 import { apiFlow } from './api.js';
+import { gatewayFlow } from './gateway.js';
 
 const RUN_GATEWAY = __ENV.RUN_GATEWAY === 'true';
 const RUN_API = __ENV.RUN_API === 'true';
@@ -40,4 +40,4 @@ export const options = {
   },
 };
 
-export { gatewayFlow, apiFlow };
+export { apiFlow, gatewayFlow };

@@ -5,11 +5,11 @@ import {
   DEFAULT_REDIS_URL,
   DEFAULT_TICK_MS,
   REDIS_CHANNEL,
-  REDIS_FLIGHT_KEY,
-  REDIS_FLIGHT_CALLSIGNS_KEY,
-  REDIS_FLIGHT_ICAO24S_KEY,
   REDIS_FLIGHT_BY_CALLSIGN_KEY,
   REDIS_FLIGHT_BY_ICAO24_KEY,
+  REDIS_FLIGHT_CALLSIGNS_KEY,
+  REDIS_FLIGHT_ICAO24S_KEY,
+  REDIS_FLIGHT_KEY,
   REDIS_FLIGHTS_KEY,
   REDIS_FLIGHTS_LAST_SEEN_KEY,
 } from '@contrail/shared/constants';
@@ -17,8 +17,8 @@ import type { Feed, FlightEvent } from '@contrail/shared/types';
 
 const logger = createLogger('feeder');
 
-const FLEET_SIZE = process.env.FLEET_SIZE ? Number.parseInt(process.env.FLEET_SIZE) : DEFAULT_FLEET_SIZE;
-const TICK_MS = process.env.TICK_MS ? Number.parseInt(process.env.TICK_MS) : DEFAULT_TICK_MS;
+const FLEET_SIZE = process.env.FLEET_SIZE ? Number.parseInt(process.env.FLEET_SIZE, 10) : DEFAULT_FLEET_SIZE;
+const TICK_MS = process.env.TICK_MS ? Number.parseInt(process.env.TICK_MS, 10) : DEFAULT_TICK_MS;
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 const STALE_MS = TICK_MS * 3;
 const CLEANUP_BATCH_SIZE = 500;
@@ -60,11 +60,12 @@ const cleanStaleFlights = async (redis: Redis) => {
 };
 
 const createFeed = async (): Promise<Feed> => {
-  if (process.env.OPENSKY_CLIENT_ID) {
+  const { OPENSKY_CLIENT_ID: clientId, OPENSKY_CLIENT_SECRET: clientSecret } = process.env;
+  if (clientId && clientSecret) {
     const { FeedOpenSky } = await import('@contrail/feed-opensky');
     return new FeedOpenSky({
-      clientId: process.env.OPENSKY_CLIENT_ID!,
-      clientSecret: process.env.OPENSKY_CLIENT_SECRET!,
+      clientId,
+      clientSecret,
       tickMs: DEFAULT_TICK_MS,
     });
   }
@@ -109,7 +110,7 @@ const main = async () => {
   };
 
   const tick = async () => {
-    let events;
+    let events: Array<FlightEvent> | undefined;
 
     try {
       events = await feed.fetch();
