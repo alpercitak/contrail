@@ -9,7 +9,7 @@
   "dependencies": {
     "@contrail/logger": "workspace:*",
     "@contrail/shared": "workspace:*",
-    "@fastify/websocket": "^11.2.0",
+    "@fastify/websocket": "^11.3.7",
     "fastify": "catalog:",
     "ioredis": "catalog:"
   },

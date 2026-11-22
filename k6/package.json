@@ -3,7 +3,7 @@
     "build": "tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "@types/k6": "^2.0.0",
+    "@types/k6": "^2.3.1",
     "typescript": "^7.0.2"
   }
 }
