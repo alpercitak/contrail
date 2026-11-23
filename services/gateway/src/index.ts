@@ -19,6 +19,9 @@ const MAX_BATCH_SIZE = 100;
 const store = new Redis(REDIS_URL);
 const sub = new Redis(REDIS_URL);
 
+store.on('error', (err) => logger.error(`Redis store error: ${err}`));
+sub.on('error', (err) => logger.error(`Redis sub error: ${err}`));
+
 const regionClients = new Map<string, Set<WebSocket>>();
 const clientRegions = new Map<WebSocket, Set<string>>();
 const clientViewports = new Map<WebSocket, BoundingBox>();
