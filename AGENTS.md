@@ -8,7 +8,7 @@ Bun + Turbo monorepo: a real-time aircraft radar. Feeder writes flight state to 
 
 ## Layout
 
-- `services/{feeder,gateway,api}/src/index.ts`: single-file Bun services (Fastify + ioredis). Tuning values are top-of-file constants; env vars fall back to `@contrail/shared/constants`.
+- `services/{feeder,gateway,api}/src/index.ts`: single-file Bun services (Fastify + ioredis). Tuning values are top-of-file constants; env vars fall back to `@contrail/shared/constants`. Pure logic worth unit-testing moves to a sibling module (e.g. `gateway/src/grid.ts`) because importing `index.ts` starts the server.
 - `packages/shared`: `FlightEvent`/message types, Redis keys and defaults (`constants/`), wire encode/decode (`wire.ts`). Any message-shape change goes through `wire.ts` and must stay compatible with web, gateway, and k6.
 - `packages/feed-mock`, `packages/feed-opensky`: implement the `Feed` interface. `packages/logger`: shared pino logger.
 - `apps/web/src/`: `main.ts` wires events; `utils/` holds one concern per file (`map`, `marker`, `trail`, `ws`, `worker`, `hud`, …). The WebSocket lives in `utils/worker.ts`; the main thread only sees shaped flights.
