@@ -2,7 +2,6 @@
 
 ## Bugs
 
-- feeder: deleting `flight:by:callsign` on callsign change or staleness can drop the mapping of another aircraft sharing that callsign (search still finds it via the prefix index).
 - gateway/web: viewports crossing the antimeridian (MapLibre west < -180 or east > 180) are clamped, so aircraft on the wrapped side aren't streamed.
 
 ## Cleanup

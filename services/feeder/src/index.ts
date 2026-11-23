@@ -32,6 +32,20 @@ const callsignIndexMember = (flight: FlightEvent) => `${normalizeSearchValue(fli
 const icao24IndexMember = (flight: FlightEvent) => `${normalizeSearchValue(flight.icao24)}:${flight.icao24}`;
 const historyKey = (icao24: string) => `${REDIS_FLIGHT_KEY}:history:${icao24}`;
 
+// Several aircraft can share a callsign; only drop a mapping that still points at the aircraft giving it up.
+// The feeder is the only writer, so reading before deleting is race-free.
+const removeCallsignMappings = async (redis: Redis, flights: Array<FlightEvent>) => {
+  if (flights.length === 0) {
+    return;
+  }
+  const callsigns = flights.map((flight) => normalizeSearchValue(flight.callsign));
+  const owners = await redis.hmget(REDIS_FLIGHT_BY_CALLSIGN_KEY, ...callsigns);
+  const owned = callsigns.filter((_, i) => owners[i] === flights[i].icao24);
+  if (owned.length > 0) {
+    await redis.hdel(REDIS_FLIGHT_BY_CALLSIGN_KEY, ...owned);
+  }
+};
+
 const cleanStaleFlights = async (redis: Redis) => {
   const staleBefore = Date.now() - STALE_MS;
   const staleIcao24s = await redis.zrangebyscore(
@@ -55,7 +69,6 @@ const cleanStaleFlights = async (redis: Redis) => {
   pipeline.hdel(REDIS_FLIGHTS_KEY, ...staleIcao24s);
   pipeline.hdel(REDIS_FLIGHT_BY_ICAO24_KEY, ...staleIcao24s.map(normalizeSearchValue));
   if (staleFlights.length > 0) {
-    pipeline.hdel(REDIS_FLIGHT_BY_CALLSIGN_KEY, ...staleFlights.map((flight) => normalizeSearchValue(flight.callsign)));
     pipeline.zrem(REDIS_FLIGHT_CALLSIGNS_KEY, ...staleFlights.map(callsignIndexMember));
     pipeline.zrem(REDIS_FLIGHT_ICAO24S_KEY, ...staleFlights.map(icao24IndexMember));
   }
@@ -63,6 +76,7 @@ const cleanStaleFlights = async (redis: Redis) => {
   pipeline.del(...staleIcao24s.map(historyKey));
   pipeline.publish(REDIS_CHANNEL, JSON.stringify({ type: 'remove', icao24s: staleIcao24s } satisfies RemoveMessage));
   await pipeline.exec();
+  await removeCallsignMappings(redis, staleFlights);
 };
 
 const createFeed = async (): Promise<Feed> => {
@@ -128,13 +142,14 @@ const main = async () => {
 
     const seenAt = Date.now();
     const previous = await redis.hmget(REDIS_FLIGHTS_KEY, ...events.map((flight) => flight.icao24));
+    const renamed: Array<FlightEvent> = [];
     const pipeline = redis.pipeline();
 
     for (const [i, flight] of events.entries()) {
       const prevRaw = previous[i];
       const prev = prevRaw ? (JSON.parse(prevRaw) as FlightEvent) : null;
       if (prev && prev.callsign !== flight.callsign) {
-        pipeline.hdel(REDIS_FLIGHT_BY_CALLSIGN_KEY, normalizeSearchValue(prev.callsign));
+        renamed.push(prev);
         pipeline.zrem(REDIS_FLIGHT_CALLSIGNS_KEY, callsignIndexMember(prev));
       }
 
@@ -151,6 +166,7 @@ const main = async () => {
     }
 
     await pipeline.exec();
+    await removeCallsignMappings(redis, renamed);
     await cleanStaleFlights(redis);
     logger.info(`Tick: ${events.length} aircraft`);
   };
