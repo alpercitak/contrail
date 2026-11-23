@@ -19,3 +19,23 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directories: [/apps/web, /services/api, /services/feeder, /services/gateway]
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore(docker)
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore(docker)
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
