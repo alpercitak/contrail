@@ -17,16 +17,22 @@ export type WireGatewayMessage =
   | WireBatchMessage
   | WireRemoveMessage;
 
-export const encodeFlight = (flight: FlightEvent): WireFlight => [
-  flight.icao24,
-  flight.callsign,
-  flight.lat,
-  flight.lon,
-  flight.heading,
-  flight.altitude,
-  flight.speed,
-  flight.timestamp,
-];
+export const encodeFlight = (flight: FlightEvent): WireFlight => {
+  const wire: WireFlight = [
+    flight.icao24,
+    flight.callsign,
+    flight.lat,
+    flight.lon,
+    flight.heading,
+    flight.altitude,
+    flight.speed,
+  ];
+  // Omit rather than send undefined, which JSON turns into null.
+  if (flight.timestamp !== undefined) {
+    wire.push(flight.timestamp);
+  }
+  return wire;
+};
 
 export const decodeFlight = (flight: WireFlight): FlightEvent => ({
   icao24: flight[0],
