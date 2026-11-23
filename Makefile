@@ -4,7 +4,7 @@ redis-up:
 	docker compose up -d redis
 
 observe-up:
-	docker compose up -d loki promtail grafana
+	docker compose up -d loki alloy grafana
 
 dev: redis-up
 	bun run dev

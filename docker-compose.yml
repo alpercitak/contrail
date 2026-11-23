@@ -96,12 +96,10 @@ services:
     volumes:
       - ./observability/loki/config.yml:/etc/loki/config.yml
 
-  promtail:
-    image: grafana/promtail:3.6.11
+  alloy:
+    image: grafana/alloy:v1.22.0
     volumes:
-      - ./observability/promtail/config.yml:/etc/promtail/config.yml
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy
       - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-    command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki

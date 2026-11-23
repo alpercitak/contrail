@@ -16,7 +16,7 @@ Contrail streams live-looking aircraft positions into Redis, fans them out throu
 - **Viewport-aware streaming**: clients send their current bounding box and receive only aircraft inside the relevant grid cells.
 - **Redis as the flight board**: current aircraft, search indexes, last-seen cleanup, history, and pub/sub all share one fast data plane.
 - **Scale-shaped locally**: the gateway can run behind an Nginx load balancer with multiple replicas.
-- **Observability included**: Grafana, Loki, and Promtail are wired into Docker Compose.
+- **Observability included**: Grafana, Loki, and Alloy are wired into Docker Compose.
 - **Testable pressure points**: k6 scripts cover the API and gateway paths.
 
 ## Architecture
@@ -36,7 +36,7 @@ flowchart LR
   Web["web app\ninteractive map"]
   Grafana["Grafana"]
   Loki["Loki"]
-  Promtail["Promtail"]
+  Alloy["Alloy"]
 
   Mock --> Feeder
   OpenSky --> Feeder
@@ -47,7 +47,7 @@ flowchart LR
   Web -->|"viewport bbox"| LB
   LB --> Gateway
   Gateway -->|"snapshot + batches"| Web
-  Promtail --> Loki
+  Alloy --> Loki
   Loki --> Grafana
 ```
 
@@ -64,7 +64,7 @@ flowchart LR
 | `packages/feed-opensky` | OpenSky-backed feed implementation                                   |
 | `packages/logger`       | Shared structured logger                                             |
 | `k6`                    | Load-test scenarios                                                  |
-| `observability`         | Grafana, Loki, and Promtail config                                   |
+| `observability`         | Grafana, Loki, and Alloy config                                      |
 
 ## Quick Start
 
