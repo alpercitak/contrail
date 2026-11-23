@@ -70,7 +70,7 @@ flowchart LR
 
 Requirements:
 
-- Bun, at the version in `package.json` `packageManager` (currently `1.4.2`)
+- Bun, at the version in `package.json` `packageManager` (currently `1.4.5`)
 - Docker and Docker Compose
 
 Install dependencies:
