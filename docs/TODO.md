@@ -2,4 +2,4 @@
 
 ## Infra
 
-- Service images are ~376 MB, almost all `oven/bun:1.4.5` (bundles are ~2 MB). The runtime stage could use `oven/bun:1.4.5-alpine` or `-distroless` (about half the compressed size); needs a `make up` run to confirm the bundles work there.
+- gateway-lb: nginx resolves `gateway` once at startup, so a replica recreated with a new IP is unreachable until `gateway-lb` restarts. A `resolver 127.0.0.11` with a variable in `proxy_pass` (or nginx `server ... resolve`) would re-resolve.

@@ -4,7 +4,7 @@ COPY . .
 RUN bun install --frozen-lockfile
 RUN bun run build
 
-FROM oven/bun:1.4.5
+FROM oven/bun:1.4.5-alpine
 WORKDIR /app
 COPY --from=base /app/services/api/dist ./dist
 COPY --from=base /app/services/api/package.json ./package.json
