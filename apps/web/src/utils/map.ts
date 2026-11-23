@@ -10,7 +10,7 @@ setWorkerUrl(mapWorkerUrl);
 
 export const map = new MapLibreMap({
   container: 'map',
-  style: 'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json',
+  style: 'https://tiles.openfreemap.org/styles/dark',
   center: [10, 52],
   zoom: 4,
   minZoom: 3,
