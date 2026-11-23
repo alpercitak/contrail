@@ -31,4 +31,4 @@ jobs:
 
       - uses: alpercitak/fasttrack@v0
         with:
-          args: --build --affected --parallel --verbose
+          args: --build --typecheck --test --affected --verbose

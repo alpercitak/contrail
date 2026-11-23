@@ -2,8 +2,8 @@
 
 ## Cleanup
 
-- Add a typecheck task (services build with `bun build`, which skips type checking) and run tests + typecheck in CI.
-- Tests only cover feed-mock; add coverage for wire encode/decode, gateway cell routing, api search.
+- CI: fasttrack's `--affected` filters turbo with `[base...HEAD]`, which selects only changed packages, not their dependents. A change in `packages/shared` doesn't build, type-check or test the services and web app that use it; turbo's `...[base...HEAD]` would include them.
+- Tests cover only feed-mock and shared `inViewport`; add coverage for wire encode/decode, gateway cell routing, api search.
 
 ## Infra
 
