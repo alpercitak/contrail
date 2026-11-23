@@ -7,5 +7,4 @@
 
 ## Infra
 
-- web: `maplibre-gl` codeSplitting group has no effect; everything lands in a 1 MB `vendor` chunk.
 - Bun version drift: README 1.3.13, `packageManager` 1.3.14.

@@ -25,7 +25,6 @@ export default defineConfig({
       output: {
         codeSplitting: {
           groups: [
-            { name: 'maplibre-gl', test: /maplibre-gl/, priority: 10 },
             { name: 'feed-mock', test: /[\\/]packages[\\/]feed-mock[\\/]/ },
             { name: 'vendor', test: /[\\/]node_modules[\\/]/, priority: -10 },
           ],
