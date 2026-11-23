@@ -1,10 +1,11 @@
+import type { Feature, FeatureCollection } from 'geojson';
 import { AttributionControl, type GeoJSONSource, MapLibreMap, NavigationControl, setWorkerUrl } from 'maplibre-gl';
 import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-const aircraftCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
-const trailCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
-const historyTrailCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+const aircraftCollection: FeatureCollection = { type: 'FeatureCollection', features: [] };
+const trailCollection: FeatureCollection = { type: 'FeatureCollection', features: [] };
+const historyTrailCollection: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
 setWorkerUrl(mapWorkerUrl);
 
@@ -118,19 +119,19 @@ map.on('load', async () => {
   });
 });
 
-export const setAircraftData = (features: Array<GeoJSON.Feature>) => {
+export const setAircraftData = (features: Array<Feature>) => {
   const source = map.getSource<GeoJSONSource>('aircraft');
   aircraftCollection.features = features;
   source?.setData(aircraftCollection);
 };
 
-export const setTrailData = (features: Array<GeoJSON.Feature>) => {
+export const setTrailData = (features: Array<Feature>) => {
   const source = map.getSource<GeoJSONSource>('trails');
   trailCollection.features = features;
   source?.setData(trailCollection);
 };
 
-export const setHistoryTrailData = (features: Array<GeoJSON.Feature>) => {
+export const setHistoryTrailData = (features: Array<Feature>) => {
   const source = map.getSource<GeoJSONSource>('history-trails');
   historyTrailCollection.features = features;
   source?.setData(historyTrailCollection);

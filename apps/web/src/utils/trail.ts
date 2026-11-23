@@ -1,9 +1,10 @@
+import type { Feature } from 'geojson';
 import { setTrailData } from './map';
 import { scheduleMapDataRender } from './render-scheduler';
 
 const TRAIL_LENGTH = 12;
 const trailPositions = new Map<string, [number, number][]>();
-const trailFeatureBuffer: Array<GeoJSON.Feature> = [];
+const trailFeatureBuffer: Array<Feature> = [];
 
 const renderTrails = () => {
   trailFeatureBuffer.length = 0;
