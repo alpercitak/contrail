@@ -15,6 +15,18 @@ jobs:
     timeout-minutes: 5
     runs-on: ubuntu-latest
 
+    # API search tests run against this Redis (database 15); keep the tag in step with docker-compose.yml.
+    services:
+      redis:
+        image: redis:8.10-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v7
         with:
