@@ -2,7 +2,7 @@ import fastifyWebsocket, { type WebSocket } from '@fastify/websocket';
 import Fastify from 'fastify';
 import Redis from 'ioredis';
 import { createLogger } from '@contrail/logger';
-import { decodeGatewayMessage, encodeGatewayMessage } from '@contrail/shared';
+import { decodeGatewayMessage, encodeGatewayMessage, inViewport } from '@contrail/shared';
 import { DEFAULT_REDIS_URL, REDIS_CHANNEL, REDIS_FLIGHTS_KEY } from '@contrail/shared/constants';
 import type { BoundingBox, FlightEvent, GatewayMessage, RemoveMessage } from '@contrail/shared/types';
 
@@ -37,25 +37,35 @@ const safeParse = (v: string): FlightEvent | null => {
   }
 };
 
-const getCellId = (lat: number, lon: number) => `${Math.floor(lon / GRID_SIZE)}:${Math.floor(lat / GRID_SIZE)}`;
+const GRID_COLUMNS = 360 / GRID_SIZE;
+
+// Column index wrapped into [-180, 180) so cells on both sides of the antimeridian line up.
+const getColumn = (x: number) =>
+  ((((x + GRID_COLUMNS / 2) % GRID_COLUMNS) + GRID_COLUMNS) % GRID_COLUMNS) - GRID_COLUMNS / 2;
+
+const getCellId = (lat: number, lon: number) =>
+  `${getColumn(Math.floor(lon / GRID_SIZE))}:${Math.floor(lat / GRID_SIZE)}`;
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-// Client-supplied bbox: reject non-numbers and clamp to the globe so the cell loop stays bounded.
+// Client-supplied bbox: reject non-numbers and inverted ranges, clamp latitude, and shift longitude so lonMin is in
+// [-180, 180) while keeping the width (capped at one world), so the cell loop stays bounded across the antimeridian.
 const toValidBBox = (bbox: BoundingBox): BoundingBox | null => {
-  if (![bbox.latMin, bbox.latMax, bbox.lonMin, bbox.lonMax].every(Number.isFinite)) {
+  if (![bbox.latMin, bbox.latMax, bbox.lonMin, bbox.lonMax].every(Number.isFinite) || bbox.lonMin > bbox.lonMax) {
     return null;
   }
+  const width = Math.min(bbox.lonMax - bbox.lonMin, 360);
+  const lonMin = ((((bbox.lonMin + 180) % 360) + 360) % 360) - 180;
   return {
     latMin: clamp(bbox.latMin, -90, 90),
     latMax: clamp(bbox.latMax, -90, 90),
-    lonMin: clamp(bbox.lonMin, -180, 180),
-    lonMax: clamp(bbox.lonMax, -180, 180),
+    lonMin,
+    lonMax: lonMin + width,
   };
 };
 
 const getCellsForBBox = (bbox: BoundingBox) => {
-  const cells: Array<string> = [];
+  const cells = new Set<string>();
 
   const minX = Math.floor(bbox.lonMin / GRID_SIZE);
   const maxX = Math.floor(bbox.lonMax / GRID_SIZE);
@@ -64,11 +74,11 @@ const getCellsForBBox = (bbox: BoundingBox) => {
 
   for (let x = minX; x <= maxX; x++) {
     for (let y = minY; y <= maxY; y++) {
-      cells.push(`${x}:${y}`);
+      cells.add(`${getColumn(x)}:${y}`);
     }
   }
 
-  return cells;
+  return [...cells];
 };
 
 const buildSnapshotCells = (flights: Array<FlightEvent>) => {
@@ -98,9 +108,6 @@ const getSnapshotCells = async (): Promise<Map<string, Array<FlightEvent>>> => {
   lastSnapshot = now;
   return cachedSnapshotCells;
 };
-
-const inViewport = (flight: FlightEvent, bbox: BoundingBox): boolean =>
-  flight.lat >= bbox.latMin && flight.lat <= bbox.latMax && flight.lon >= bbox.lonMin && flight.lon <= bbox.lonMax;
 
 const sameBBox = (a: BoundingBox | undefined, b: BoundingBox): boolean =>
   a?.latMin === b.latMin && a.latMax === b.latMax && a.lonMin === b.lonMin && a.lonMax === b.lonMax;

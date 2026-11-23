@@ -1,4 +1,4 @@
-import { decodeGatewayMessage, encodeGatewayMessage } from '@contrail/shared';
+import { decodeGatewayMessage, encodeGatewayMessage, inViewport } from '@contrail/shared';
 import type { BoundingBox, FlightEvent } from '@contrail/shared/types';
 import { type AircraftFeature, toAircraftFeature } from './aircraft-feature';
 
@@ -20,9 +20,6 @@ let wsUrl = '';
 let pendingUpdates = new Map<string, FlightEvent>();
 let flushScheduled = false;
 const knownState = new Map<string, FlightEvent>();
-
-const inViewport = (flight: FlightEvent, b: BoundingBox): boolean =>
-  flight.lat >= b.latMin && flight.lat <= b.latMax && flight.lon >= b.lonMin && flight.lon <= b.lonMax;
 
 const hasChanged = (prev: FlightEvent, next: FlightEvent): boolean => {
   const latDiff = Math.abs(prev.lat - next.lat);

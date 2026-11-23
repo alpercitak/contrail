@@ -1,9 +1,5 @@
 # TODO
 
-## Bugs
-
-- gateway/web: viewports crossing the antimeridian (MapLibre west < -180 or east > 180) are clamped, so aircraft on the wrapped side aren't streamed.
-
 ## Cleanup
 
 - web: `src/types/index.ts` imports `leaflet` (leftover from migration); `MarkerEntry`/`InterpolationState` are dead.

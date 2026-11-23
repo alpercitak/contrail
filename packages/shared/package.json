@@ -21,6 +21,10 @@
   "scripts": {
     "dev": "bun --watch src",
     "build": "tsc -p tsconfig.json",
-    "clean": "rm -rf ./dist"
+    "clean": "rm -rf ./dist",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
   }
 }

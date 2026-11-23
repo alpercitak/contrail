@@ -54,6 +54,9 @@
     "packages/shared": {
       "name": "@contrail/shared",
       "version": "0.1.0",
+      "devDependencies": {
+        "@types/bun": "catalog:",
+      },
     },
     "services/api": {
       "name": "@contrail/api",
