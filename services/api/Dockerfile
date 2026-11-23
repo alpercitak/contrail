@@ -1,10 +1,10 @@
-FROM oven/bun:latest AS base
+FROM oven/bun:1.4.2 AS base
 WORKDIR /app
 COPY . .
-RUN bun install
+RUN bun install --frozen-lockfile
 RUN bun run build
 
-FROM oven/bun:latest
+FROM oven/bun:1.4.2
 WORKDIR /app
 COPY --from=base /app/services/api/dist ./dist
 COPY --from=base /app/services/api/package.json ./package.json

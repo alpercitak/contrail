@@ -1,13 +1,12 @@
-FROM node:26 AS build
+FROM oven/bun:1.4.2 AS build
 
 WORKDIR /app
 COPY . .
-RUN npm install -g bun
-RUN bun install
+RUN bun install --frozen-lockfile
 
 RUN bun run build --cwd apps/web
 
-FROM nginx:alpine
+FROM nginx:1.31.9-alpine
 
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html

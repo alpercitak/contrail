@@ -7,7 +7,6 @@
 
 ## Infra
 
-- `.dockerignore` excludes `bun.lock`; images use `:latest` tags — builds aren't reproducible.
 - Runtime images copy the whole root `node_modules`.
 - Promtail is deprecated in favor of Grafana Alloy.
 - web: `maplibre-gl` codeSplitting group has no effect; everything lands in a 1 MB `vendor` chunk.
