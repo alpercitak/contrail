@@ -146,21 +146,23 @@ GET /health
 
 ## WebSocket
 
-Connect to `/ws`, then send viewport messages:
+Messages are compact JSON arrays (see `packages/shared/src/wire.ts`). Connect to `/ws`, then send your viewport as `["v", [latMin, latMax, lonMin, lonMax]]`:
 
 ```json
-{
-  "type": "viewport",
-  "bbox": {
-    "latMin": 40,
-    "latMax": 55,
-    "lonMin": -5,
-    "lonMax": 15
-  }
-}
+["v", [40, 55, -5, 15]]
 ```
 
-The gateway responds with `snapshot` messages for the current viewport and `batch` messages for live updates.
+Longitudes may run past ±180 when the viewport crosses the antimeridian. Send a new viewport whenever the map moves.
+
+The gateway responds with:
+
+| Message              | Meaning                                                                                                                                  |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `["s", [flight, …]]` | Snapshot of every aircraft in the viewport; replaces what the client has. Sent after each viewport message and when the feeder restarts. |
+| `["b", [flight, …]]` | Batch of live position updates.                                                                                                          |
+| `["r", [icao24, …]]` | Aircraft that went stale and should be removed.                                                                                          |
+
+Each `flight` is `[icao24, callsign, lat, lon, heading, altitude, speed, timestamp]`: heading in degrees, altitude in meters, speed in km/h, timestamp in Unix milliseconds (optional).
 
 ## License
 
