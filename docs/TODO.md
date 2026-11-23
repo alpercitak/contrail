@@ -7,7 +7,7 @@
 
 ## Infra
 
-- Runtime images copy the whole root `node_modules`.
+- gateway: the `store`/`sub` Redis clients have no `error` listener, so ioredis prints an "Unhandled error event" stack trace on every failed reconnect.
 - Promtail is deprecated in favor of Grafana Alloy.
 - web: `maplibre-gl` codeSplitting group has no effect; everything lands in a 1 MB `vendor` chunk.
 - Bun version drift: README 1.3.13, `packageManager` 1.3.14.

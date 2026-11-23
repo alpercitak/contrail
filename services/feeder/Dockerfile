@@ -7,6 +7,5 @@ RUN bun run build
 FROM oven/bun:1.4.2
 WORKDIR /app
 COPY --from=build /app/services/feeder/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
 
 CMD ["bun", "dist/index.js"]
