@@ -3,6 +3,7 @@
 Bun + Turbo monorepo: a real-time aircraft radar. Feeder writes flight state to Redis, gateway fans it out over viewport-aware WebSockets, api serves search/history, web renders it on a MapLibre map.
 
 - Use Bun for dependencies and package scripts. Shared dependency versions live in the root `package.json` `catalog`.
+- The Bun version lives in `packageManager` (CI reads it from there); bump the `oven/bun` tags in the Dockerfiles with it.
 - Import across workspaces via `@contrail/<package>` (e.g. `@contrail/shared/types`), never relative paths.
 - For review, diagnosis, or planning, inspect only. For implementation, preserve unrelated user changes.
 
