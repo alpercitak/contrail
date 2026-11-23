@@ -2,4 +2,4 @@
 
 ## Infra
 
-- gateway-lb: nginx resolves `gateway` once at startup, so a replica recreated with a new IP is unreachable until `gateway-lb` restarts. A `resolver 127.0.0.11` with a variable in `proxy_pass` (or nginx `server ... resolve`) would re-resolve.
+- web: its nginx (`apps/web/nginx.conf`) proxies `/api` to `api:3002` and `/ws` to `gateway-lb`, resolved once at startup. A recreated `api` or `gateway-lb` with a new IP breaks the proxy until `web` restarts; the same `resolver` + `upstream ... resolve` fix as `services/gateway/nginx.conf` applies.
