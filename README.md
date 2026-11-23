@@ -121,7 +121,7 @@ OPENSKY_CLIENT_ID=...
 OPENSKY_CLIENT_SECRET=...
 ```
 
-The feeder switches to `@contrail/feed-opensky` when `OPENSKY_CLIENT_ID` is present.
+The feeder switches to `@contrail/feed-opensky` when both are present. OpenSky mode polls every 90 seconds by default, which keeps a standard account (4,000 credits/day, 4 per `/states/all` call) within its daily allowance. Set `TICK_MS` to poll faster if your account has a larger allowance.
 
 ## Useful Commands
 

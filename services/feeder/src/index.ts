@@ -2,6 +2,7 @@ import Redis from 'ioredis';
 import { createLogger } from '@contrail/logger';
 import {
   DEFAULT_FLEET_SIZE,
+  DEFAULT_OPENSKY_TICK_MS,
   DEFAULT_REDIS_URL,
   DEFAULT_TICK_MS,
   REDIS_CHANNEL,
@@ -17,8 +18,10 @@ import type { Feed, FlightEvent, RemoveMessage } from '@contrail/shared/types';
 
 const logger = createLogger('feeder');
 
+const { OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET } = process.env;
 const FLEET_SIZE = process.env.FLEET_SIZE ? Number.parseInt(process.env.FLEET_SIZE, 10) : DEFAULT_FLEET_SIZE;
-const TICK_MS = process.env.TICK_MS ? Number.parseInt(process.env.TICK_MS, 10) : DEFAULT_TICK_MS;
+const DEFAULT_FEED_TICK_MS = OPENSKY_CLIENT_ID && OPENSKY_CLIENT_SECRET ? DEFAULT_OPENSKY_TICK_MS : DEFAULT_TICK_MS;
+const TICK_MS = process.env.TICK_MS ? Number.parseInt(process.env.TICK_MS, 10) : DEFAULT_FEED_TICK_MS;
 const REDIS_URL = process.env.REDIS_URL ?? DEFAULT_REDIS_URL;
 const STALE_MS = TICK_MS * 3;
 const CLEANUP_BATCH_SIZE = 500;
@@ -63,12 +66,11 @@ const cleanStaleFlights = async (redis: Redis) => {
 };
 
 const createFeed = async (): Promise<Feed> => {
-  const { OPENSKY_CLIENT_ID: clientId, OPENSKY_CLIENT_SECRET: clientSecret } = process.env;
-  if (clientId && clientSecret) {
+  if (OPENSKY_CLIENT_ID && OPENSKY_CLIENT_SECRET) {
     const { FeedOpenSky } = await import('@contrail/feed-opensky');
     return new FeedOpenSky({
-      clientId,
-      clientSecret,
+      clientId: OPENSKY_CLIENT_ID,
+      clientSecret: OPENSKY_CLIENT_SECRET,
     });
   }
 

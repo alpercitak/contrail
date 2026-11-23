@@ -55,7 +55,6 @@ services:
     environment:
       REDIS_URL: redis://redis:6379
       FLEET_SIZE: "150"
-      TICK_MS: "5000"
       # OPENSKY_CLIENT_ID:
       # OPENSKY_CLIENT_SECRET:
     labels:
