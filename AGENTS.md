@@ -5,7 +5,6 @@ Bun + Turbo monorepo: a real-time aircraft radar. Feeder writes flight state to 
 - Use Bun for dependencies and package scripts. Shared dependency versions live in the root `package.json` `catalog`.
 - The Bun version lives in `packageManager` (CI reads it from there); bump the `oven/bun` tags in the Dockerfiles with it.
 - Import across workspaces via `@contrail/<package>` (e.g. `@contrail/shared/types`), never relative paths.
-- For review, diagnosis, or planning, inspect only. For implementation, preserve unrelated user changes.
 
 ## Layout
 
@@ -44,5 +43,5 @@ Implement, verify with checks, stop. Don't keep hardening or generalizing once i
 
 Verify with `bun run build`, `bun run test`, and `bun run check` (Biome).
 Keep `docs/TODO.md` updated: remove completed work and add newly identified remaining work.
-Commit in small, feature-based Conventional Commits (`fix(gateway): …`, `refactor(web): …`); no attribution trailers.
+When asked to commit, use scoped titles such as `fix(gateway): …` or `refactor(web): …` and omit attribution trailers.
 Cut from your own diff: unneeded abstractions, redundant guards, one-use helpers, speculative config, unrelated changes, obvious-code comments. Equal correctness → ship the smaller one.
